@@ -24,7 +24,6 @@ html {
 
 #app {
     width: 100%;
-    max-width: 500px;
     height: 100%;
     overflow: hidden;
     position: absolute;

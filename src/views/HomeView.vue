@@ -1,6 +1,7 @@
 <template>
     <van-nav-bar safe-area-inset-top title="账本记录" />
-    <div ref="scrollElement" class="main-container-height box-border overflow-x-hidden overflow-y-auto bg-gray-100"
+    <div ref="scrollElement"
+        class="main-container-height box-border overflow-x-hidden overflow-y-auto will-change-scroll bg-gray-100"
         @scroll="onScrollChange()">
         <van-pull-refresh style="overflow: visible;" v-model="loading" @refresh="onRefresh">
             <div class="min-main-container-height flex flex-col">
@@ -29,10 +30,12 @@
                     </div>
                     <!-- 操作 -->
                     <div class="mt-4 flex bg-gray-50 mx-3">
-                        <van-button class="w-full" size="medium" color="#001938">
-                            <van-icon class="align-middle" size="20" name="balance-list-o" />
-                            <span class="ml-2">记一笔</span>
-                        </van-button>
+                        <router-link class="w-full" :to="{ name: 'takenote' }">
+                            <van-button class="w-full" size="medium" color="#001938">
+                                <van-icon class="align-middle" size="20" name="balance-list-o" />
+                                <span class="ml-2">记一笔</span>
+                            </van-button>
+                        </router-link>
                     </div>
                 </div>
                 <!-- 记账展示 -->
@@ -44,7 +47,7 @@
                             <span class="font-600">{{ item.time }}</span>
                             <span class="mr-1 ml-auto text-sm">收入:</span>
                             <span class="mr-4 text-sm font-600">{{ item.income }}</span>
-                            <span class="mr-1 text-sm">支出: {{ index }}</span>
+                            <span class="mr-1 text-sm">支出:</span>
                             <span class="mr-0 text-sm font-600">{{ item.spend }}</span>
                         </div>
                         <div class="flex-col flex">

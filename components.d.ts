@@ -10,6 +10,7 @@ declare module '@vue/runtime-core' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SvgIcon: typeof import('./src/components/SvgIcon.vue')['default']
+    VanActionSheet: typeof import('vant/es')['ActionSheet']
     VanButton: typeof import('vant/es')['Button']
     VanCell: typeof import('vant/es')['Cell']
     VanDivider: typeof import('vant/es')['Divider']
@@ -17,7 +18,10 @@ declare module '@vue/runtime-core' {
     VanList: typeof import('vant/es')['List']
     VanLoading: typeof import('vant/es')['Loading']
     VanNavBar: typeof import('vant/es')['NavBar']
+    VanNumberKeyboard: typeof import('vant/es')['NumberKeyboard']
     VanPullRefresh: typeof import('vant/es')['PullRefresh']
+    VanTab: typeof import('vant/es')['Tab']
+    VanTabs: typeof import('vant/es')['Tabs']
     VantButton: typeof import('vant/es')['tButton']
   }
 }
