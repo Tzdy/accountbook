@@ -6,23 +6,30 @@
             <van-tab title="收入"></van-tab>
             <van-tab title="转账"></van-tab>
         </van-tabs>
-        <div class="px-3 mx-4 mt-2 bg-light-50 rounded-md flex flex-col overflow-auto">
-            <div class="py-4 flex border-b border-b-solid border-gray-200">
-                <span class="font-600 basis-1/5 text-center">餐饮</span>
-                <input style="direction: rtl;" class="h-full mr-0 ml-auto border-none" v-model="input" readonly
-                    placeholder="请输入金额" type="text">
-            </div>
-            <div class="flex flex-wrap py-2 gap-y-3 overflow-auto will-change-scroll">
-                <!-- row -->
-                <div v-for="(item, index) in (indexActive === 0 ? spendTypeList : incomeTypeList)" :key="index"
-                    class="flex flex-col items-center gap-y-1 w-full basis-1/5">
-                    <div></div>
-                    <van-icon :name="item.icon" size="28" />
-                    <span class="text-xs">{{ item.name }}</span>
+        <div class="overflow-auto bg-light-50 pb-8 mt-2">
+            <div class="px-3 mx-4 bg-light-50 rounded-md flex flex-col overflow-auto shadow-xl h-full">
+                <div class="flex border-b border-b-solid border-gray-200">
+                    <span class="font-600 py-4  basis-1/5 text-center whitespace-nowrap flex-shrink-0">{{ labelComputed
+                    }}</span>
+                    <span
+                        :class="{ 'text-green-500': indexActive === 1, 'text-red-500': indexActive === 0, 'text-yellow-400': indexActive === 2 }"
+                        class="flex items-center mr-0 ml-auto border-none text-3xl overflow-auto"
+                        v-text="inputComputed " type="text"></span>
+                </div>
+                <div class="flex flex-wrap py-1 overflow-auto will-change-scroll" style="height: 9rem;">
+                    <!-- row -->
+                    <div @click="onSelectMethod(index)" v-for="(item, index) in takeNoteTypeList" :key="index"
+                        class="flex flex-col items-center gap-y-1 h-1/2 justify-center w-full basis-1/5 overflow-auto">
+                        <div class="rounded-1/2 p-1 w-8 h-8 transition-all duration-300"
+                            :class="{ 'bg-neutral-200': !selection[index], 'bg-yellow-300': selection[index]}">
+                            <svg-icon color="black" size="2rem" :name="item.icon" />
+                        </div>
+                        <span class="text-xs whitespace-nowrap overflow-hidden truncate">{{ item.name }}</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="mt-16 flex flex-col flex-grow-1">
+        <div class="flex flex-col flex-grow-1">
             <div class="w-screen flex flex-col bg-gray-100 gap-y-2 mt-auto">
                 <div class="flex bg-light-50 gap-x-2 items-center px-2">
                     <div class="my-2 flex items-center gap-x-2 justify-center flex-shrink-0">
@@ -93,10 +100,14 @@
 
 <script setup lang="ts">
 import $router from '@/router';
-import { ref, toRaw } from 'vue'
+import { ref, watch, reactive, computed } from 'vue'
 
 const indexActive = ref(0)
 const input = ref('')
+const inputComputed = computed(() => {
+    return input.value ? input.value : '0.00'
+})
+
 const isSelectAccountShow = ref(false)
 const selectAccountIndex = ref(0)
 const selectAccountActions = ref([
@@ -110,25 +121,87 @@ const selectAccountActions = ref([
     { name: '微信钱包', number: 0.6 },
 ]);
 
-const spendTypeList = ref([
-    {
-        icon: 'shopping-cart-o',
-        name: '餐饮'
-    }
-])
-for (let i = 0; i < 20; i++) {
-    spendTypeList.value.push(structuredClone(toRaw(spendTypeList.value[0])))
+const selection = reactive<boolean[]>([])
+selection[0] = true
+function onSelectMethod(index: number) {
+    selection.length = 0
+    selection[index] = true
 }
+const labelComputed = computed(() => {
+    return takeNoteTypeList.value[selection.findIndex(item => item)]?.name
+})
 
-const incomeTypeList = ref([
+
+
+const spendTypeList = [
+    {
+        icon: 'food',
+        name: '餐饮'
+    },
+    {
+        icon: 'bus',
+        name: '交通'
+    },
+    {
+        icon: 'buy',
+        name: '购物'
+    },
+    {
+        icon: 'house',
+        name: '居住'
+    },
+    {
+        icon: 'play',
+        name: '娱乐'
+    },
+    {
+        icon: 'medicine',
+        name: '医疗'
+    },
+    {
+        icon: 'study',
+        name: '教育'
+    },
+    {
+        icon: 'contact',
+        name: '人情'
+    },
+
+    {
+        icon: 'daily',
+        name: '日用品'
+    },
+    {
+        icon: 'other',
+        name: '其他'
+    },
+]
+
+const incomeTypeList = [
     {
         icon: 'shopping-cart-o',
         name: '工资',
     },
-])
+]
 for (let i = 0; i < 20; i++) {
-    incomeTypeList.value.push(structuredClone(toRaw(incomeTypeList.value[0])))
+    incomeTypeList.push(structuredClone(incomeTypeList[0]))
 }
+
+const takeNoteTypeList = ref<any[]>([])
+watch(indexActive, val => {
+    switch (val) {
+        case 0:
+            takeNoteTypeList.value = spendTypeList
+            break
+        case 1:
+            takeNoteTypeList.value = incomeTypeList
+            break
+        default:
+            takeNoteTypeList.value = []
+    }
+}, {
+    immediate: true
+})
 
 
 const isNoteFocus = ref(false)

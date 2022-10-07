@@ -1,5 +1,5 @@
 <template>
-    <svg class="octicon" :width="size" :height="size">
+    <svg :width="size" :height="size">
         <use :xlink:href="symbolId" :fill="color" />
     </svg>
 </template>
