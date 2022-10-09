@@ -20,6 +20,13 @@ body,
 html {
     height: 100%;
     width: 100%;
+    position: relative;
+}
+
+html {
+    padding-bottom: 0;
+    padding-bottom: constant(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 #app {

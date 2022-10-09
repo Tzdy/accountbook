@@ -1,74 +1,118 @@
 <template>
     <div class="bg-gray-100 h-full w-full flex-col flex">
-        <van-nav-bar title="账本记录" left-arrow safe-area-inset-top @click-left="onReturnPage" />
-        <van-tabs v-model:active="indexActive">
-            <van-tab title="支出"></van-tab>
-            <van-tab title="收入"></van-tab>
-            <van-tab title="转账"></van-tab>
-        </van-tabs>
-        <div class="overflow-auto bg-light-50 pb-8 mt-2">
-            <div class="px-3 mx-4 bg-light-50 rounded-md flex flex-col overflow-auto shadow-xl h-full">
-                <div class="flex border-b border-b-solid border-gray-200">
-                    <span class="font-600 py-4  basis-1/5 text-center whitespace-nowrap flex-shrink-0">{{ labelComputed
-                    }}</span>
-                    <span
-                        :class="{ 'text-green-500': indexActive === 1, 'text-red-500': indexActive === 0, 'text-yellow-400': indexActive === 2 }"
-                        class="flex items-center mr-0 ml-auto border-none text-3xl overflow-auto"
-                        v-text="inputComputed " type="text"></span>
-                </div>
-                <div class="flex flex-wrap py-1 overflow-auto will-change-scroll" style="height: 9rem;">
-                    <!-- row -->
-                    <div @click="onSelectMethod(index)" v-for="(item, index) in takeNoteTypeList" :key="index"
-                        class="flex flex-col items-center gap-y-1 h-1/2 justify-center w-full basis-1/5 overflow-auto">
-                        <div class="rounded-1/2 p-1 w-8 h-8 transition-all duration-300"
-                            :class="{ 'bg-neutral-200': !selection[index], 'bg-yellow-300': selection[index]}">
-                            <svg-icon color="black" size="2rem" :name="item.icon" />
+        <van-config-provider :theme-vars="{ 'navBarHeight': '2.75rem'}">
+            <van-nav-bar title="账本记录" left-arrow safe-area-inset-top @click-left="onReturnPage" />
+        </van-config-provider>
+        <van-config-provider :theme-vars="{ 'tabsLineHeight': '2.75rem'}">
+            <van-tabs v-model:active="indexActive">
+                <van-tab title="支出"></van-tab>
+                <van-tab title="收入"></van-tab>
+                <van-tab title="转账"></van-tab>
+            </van-tabs>
+        </van-config-provider>
+        <div class="h-full flex flex-col">
+            <div class="overflow-auto bg-light-50 pb-4 mt-2 flex-shrink-0 flex-grow-1">
+                <div class="px-3 mx-4 bg-light-50 rounded-md flex flex-col overflow-auto shadow-xl h-full">
+                    <div class="flex border-b border-b-solid border-gray-200">
+                        <span class="font-600 py-3  basis-1/5 text-center whitespace-nowrap flex-shrink-0">{{
+                        labelComputed
+                        }}</span>
+                        <span
+                            :class="{ 'text-green-500': indexActive === 1, 'text-red-500': indexActive === 0, 'text-yellow-400': indexActive === 2 }"
+                            class="flex items-center mr-0 ml-auto border-none text-3xl overflow-auto"
+                            v-text="inputComputed " type="text"></span>
+                    </div>
+                    <div v-if="indexActive !== 2" style="height: 8rem"
+                        class="flex flex-wrap pt-2 will-change-scroll gap-y-1"
+                        :class="{'overflow-auto': takeNoteTypeList.length > 10}">
+                        <!-- row -->
+                        <div @click="onSelectMethod(index)" v-for="(item, index) in takeNoteTypeList" :key="index"
+                            class="flex flex-col items-center justify-center w-full basis-1/5 overflow-auto gap-y-1 h-1/2">
+                            <div class="rounded-1/2 p-1 w-8 h-8 transition-all duration-300"
+                                :class="{ 'bg-neutral-200': !selection[index], 'bg-yellow-300': selection[index]}">
+                                <svg-icon color="black" size="2rem" :name="item.icon" />
+                            </div>
+                            <span class="text-xs whitespace-nowrap overflow-hidden truncate">{{ item.name }}</span>
                         </div>
-                        <span class="text-xs whitespace-nowrap overflow-hidden truncate">{{ item.name }}</span>
+                    </div>
+                    <div class="w-full" v-if="indexActive === 2">
+                        <div class="w-full mt-4">
+                            <span class="text-gray-400 w-1/2 text-left inline-block">转出</span>
+                            <span class="text-gray-400 w-1/2 text-right inline-block">转入</span>
+                        </div>
+                        <div class="w-full gap-x-2 mt-1 flex items-center">
+                            <div class="flex gap-x-2 w-full items-center overflow-auto">
+                                <svg-icon class="flex-shrink-0" name="transaction" size="2rem" />
+                                <div class="text-gray-400 w-full border-b border-b-solid border-gray-200 py-2 truncate">
+                                    请选择账户
+                                </div>
+                            </div>
+                            <svg-icon class="flex-shrink-0" name="contact" size="2.2rem" />
+                            <div class="flex gap-x-2 w-full items-center overflow-auto">
+                                <svg-icon class="flex-shrink-0" name="transaction" size="2rem" />
+                                <div class="text-gray-400 w-full border-b border-b-solid border-gray-200 py-2 truncate">
+                                    请选择账户
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="mt-2 flex w-full items-center overflow-auto border-b border-b-solid border-gray-200">
+                            <div class="text-gray-400 w-full py-2 truncate">
+                                手续费
+                            </div>
+                            <input ref="handfeeElement" @keydown.enter="handfeeElement?.blur()" v-model="handfeeInput"
+                                type="number" class="border-none w-full text-right" placeholder="0.00">
+                        </div>
+                        <div class="text-gray-400 py-2">
+                            转账成功可以
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="flex flex-col flex-grow-1">
-            <div class="w-screen flex flex-col bg-gray-100 gap-y-2 mt-auto">
-                <div class="flex bg-light-50 gap-x-2 items-center px-2">
-                    <div class="my-2 flex items-center gap-x-2 justify-center flex-shrink-0">
-                        <van-icon name="credit-pay" />
-                        <span class="ellipsis">信用卡</span>
+            <div class="flex flex-col flex-grow-1 justify-end">
+                <div class="w-screen flex flex-col bg-gray-100 gap-y-2">
+                    <div class="flex bg-light-50 gap-x-2 items-center px-2">
+                        <div class="my-2 flex items-center gap-x-2 justify-center flex-shrink-0">
+                            <van-icon name="credit-pay" />
+                            <span class="ellipsis">信用卡</span>
+                        </div>
+                        <div class="flex items-center gap-x-2 justify-center flex-grow-1">
+                            <van-icon name="edit" />
+                            <input @focus="isNoteFocus = true" @blur="isNoteFocus = false"
+                                class="h-full w-full border-none" placeholder="备注" type="text">
+                        </div>
+                        <van-button v-show="isNoteFocus" class="flex-shrink-0" size="mini"
+                            style="background-color: #fcd34d; padding: 0 0.75rem;">
+                            ok
+                        </van-button>
                     </div>
-                    <div class="flex items-center gap-x-2 justify-center flex-grow-1">
-                        <van-icon name="edit" />
-                        <input @focus="isNoteFocus = true" @blur="isNoteFocus = false" class="h-full w-full border-none"
-                            placeholder="备注" type="text">
+                    <div class="flex bg-light-50 py-2">
+                        <div @click="isSelectAccountShow=true"
+                            class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
+                            <van-icon name="credit-pay" />
+                            <span class="ellipsis">信用卡</span>
+                        </div>
+                        <div class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
+                            <van-icon name="friends-o" />
+                            <span class="ellipsis">我</span>
+                        </div>
+                        <div class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
+                            <van-icon name="photo-o" />
+                            <span class="ellipsis">相片</span>
+                        </div>
+                        <div class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
+                            <van-icon name="location-o" />
+                            <span class="ellipsis">位置</span>
+                        </div>
                     </div>
-                    <van-button v-show="isNoteFocus" class="flex-shrink-0" size="mini"
-                        style="background-color: #fcd34d; padding: 0 0.75rem;">
-                        ok
-                    </van-button>
                 </div>
-                <div class="flex bg-light-50 py-2">
-                    <div @click="isSelectAccountShow=true"
-                        class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
-                        <van-icon name="credit-pay" />
-                        <span class="ellipsis">信用卡</span>
-                    </div>
-                    <div class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
-                        <van-icon name="friends-o" />
-                        <span class="ellipsis">我</span>
-                    </div>
-                    <div class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
-                        <van-icon name="photo-o" />
-                        <span class="ellipsis">相片</span>
-                    </div>
-                    <div class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
-                        <van-icon name="location-o" />
-                        <span class="ellipsis">位置</span>
-                    </div>
-                </div>
+                <van-config-provider
+                    :theme-vars="{ 'numberKeyboardKeyHeight': '2rem', 'numberKeyboardKeyFontSize': '1.5rem'}">
+                    <van-number-keyboard :safe-area-inset-bottom="false" style="position: static;" :show="true"
+                        theme="custom" extra-key="." close-button-text="完成" @input="onInput" @delete="onDelete">
+                    </van-number-keyboard>
+                </van-config-provider>
             </div>
-            <van-number-keyboard class="mb-0" style="position: static;" :show="true" theme="custom" extra-key="."
-                close-button-text="完成" @input="onInput" @delete="onDelete">
-            </van-number-keyboard>
         </div>
 
         <!-- 选择账户 -->
@@ -128,7 +172,11 @@ function onSelectMethod(index: number) {
     selection[index] = true
 }
 const labelComputed = computed(() => {
-    return takeNoteTypeList.value[selection.findIndex(item => item)]?.name
+    if (indexActive.value === 0 || indexActive.value === 1) {
+        return takeNoteTypeList.value[selection.findIndex(item => item)]?.name
+    } else {
+        return '转账金额'
+    }
 })
 
 
@@ -175,17 +223,35 @@ const spendTypeList = [
         icon: 'other',
         name: '其他'
     },
+    {
+        icon: 'contact',
+        name: '人情'
+    },
+
+    {
+        icon: 'daily',
+        name: '日用品'
+    },
+    {
+        icon: 'other',
+        name: '其他'
+    },
 ]
 
 const incomeTypeList = [
     {
-        icon: 'shopping-cart-o',
+        icon: 'salary',
         name: '工资',
     },
+    {
+        icon: 'red',
+        name: '红包'
+    },
+    {
+        icon: 'other-income',
+        name: '其它收入'
+    }
 ]
-for (let i = 0; i < 20; i++) {
-    incomeTypeList.push(structuredClone(incomeTypeList[0]))
-}
 
 const takeNoteTypeList = ref<any[]>([])
 watch(indexActive, val => {
@@ -217,6 +283,10 @@ function onInput(val: string) {
 function onDelete() {
     input.value = input.value.slice(0, input.value.length - 1)
 }
+
+// 手续费输入
+const handfeeInput = ref('')
+const handfeeElement = ref<HTMLInputElement | null>(null)
 
 </script>
 
