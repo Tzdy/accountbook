@@ -13,8 +13,9 @@
         <div class="h-full flex flex-col">
             <div class="overflow-auto bg-light-50 pb-4 mt-2 flex-shrink-0 flex-grow-1">
                 <div class="px-3 mx-4 bg-light-50 rounded-md flex flex-col overflow-auto shadow-xl h-full">
+                    <!-- 支出/收入/转账金额 Label -->
                     <div class="flex border-b border-b-solid border-gray-200">
-                        <span class="font-600 py-3  basis-1/5 text-center whitespace-nowrap flex-shrink-0">{{
+                        <span class="font-600 py-4  basis-1/5 text-center whitespace-nowrap flex-shrink-0">{{
                         labelComputed
                         }}</span>
                         <span
@@ -22,6 +23,7 @@
                             class="flex items-center mr-0 ml-auto border-none text-3xl overflow-auto"
                             v-text="inputComputed " type="text"></span>
                     </div>
+                    <!-- 由于有gap-y-1的间隙，会出现滚动条50% + 50% != 100%。所以大于两行的时候才显示滚动条 -->
                     <div v-if="indexActive !== 2" style="height: 8rem"
                         class="flex flex-wrap pt-2 will-change-scroll gap-y-1"
                         :class="{'overflow-auto': takeNoteTypeList.length > 10}">
@@ -63,26 +65,26 @@
                             <input ref="handfeeElement" @keydown.enter="handfeeElement?.blur()" v-model="handfeeInput"
                                 type="number" class="border-none w-full text-right" placeholder="0.00">
                         </div>
-                        <div class="text-gray-400 py-2">
-                            转账成功可以
+                        <div class="text-gray-400 text-sm py-2">
+                            转账成功可以资产-转账-记录查看
                         </div>
                     </div>
                 </div>
             </div>
             <div class="flex flex-col flex-grow-1 justify-end">
                 <div class="w-screen flex flex-col bg-gray-100 gap-y-2">
-                    <div class="flex bg-light-50 gap-x-2 items-center px-2">
-                        <div class="my-2 flex items-center gap-x-2 justify-center flex-shrink-0">
-                            <van-icon name="credit-pay" />
-                            <span class="ellipsis">信用卡</span>
+                    <div class="flex bg-light-50 gap-x-2 items-center">
+                        <div class="my-2 basis-1/4 flex items-center gap-x-2 justify-center flex-shrink-0">
+                            <van-icon name="tosend" />
+                            <span class="ellipsis">10.10</span>
                         </div>
                         <div class="flex items-center gap-x-2 justify-center flex-grow-1">
                             <van-icon name="edit" />
                             <input @focus="isNoteFocus = true" @blur="isNoteFocus = false"
-                                class="h-full w-full border-none" placeholder="备注" type="text">
+                                class="h-full w-full border-none" placeholder="备注" type="search">
                         </div>
                         <van-button v-show="isNoteFocus" class="flex-shrink-0" size="mini"
-                            style="background-color: #fcd34d; padding: 0 0.75rem;">
+                            style="background-color: #fcd34d; padding: 0.75rem 1rem; margin-right: 0.75rem;">
                             ok
                         </van-button>
                     </div>
@@ -255,6 +257,8 @@ const incomeTypeList = [
 
 const takeNoteTypeList = ref<any[]>([])
 watch(indexActive, val => {
+    selection.length = 0
+    selection[0] = true
     switch (val) {
         case 0:
             takeNoteTypeList.value = spendTypeList

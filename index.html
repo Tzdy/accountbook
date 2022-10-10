@@ -8,7 +8,15 @@
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover" />
   <title>Vite App</title>
   <script>
-    document.querySelector('html').style.fontSize = window.innerWidth / (375 / 16) + 'px'
+    if (window.innerWidth / window.innerHeight >= 0.6) {
+      document.querySelector('html').style.fontSize = window.innerWidth / (375 / 16) + 'px'
+    } else if (window.innerWidth / window.innerHeight >= 0.55) {
+      document.querySelector('html').style.fontSize = window.innerWidth / (375 / 17) + 'px'
+    } else if (window.innerWidth / window.innerHeight >= 0.5) {
+      document.querySelector('html').style.fontSize = window.innerWidth / (375 / 18) + 'px'
+    } else {
+      document.querySelector('html').style.fontSize = window.innerWidth / (375 / 19) + 'px'
+    }
     // alert(window.innerWidth)
     // alert(window.innerHeight)
   </script>
