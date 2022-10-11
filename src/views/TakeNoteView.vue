@@ -88,7 +88,7 @@
                             ok
                         </van-button>
                     </div>
-                    <div class="flex bg-light-50 py-2">
+                    <div v-if="indexActive !== 2" class="flex bg-light-50 py-2">
                         <div @click="isSelectAccountShow=true"
                             class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
                             <van-icon name="credit-pay" />
@@ -109,7 +109,7 @@
                     </div>
                 </div>
                 <van-config-provider
-                    :theme-vars="{ 'numberKeyboardKeyHeight': '2rem', 'numberKeyboardKeyFontSize': '1.5rem'}">
+                    :theme-vars="{ 'numberKeyboardKeyHeight': '2.2rem', 'numberKeyboardKeyFontSize': '1.5rem'}">
                     <van-number-keyboard :safe-area-inset-bottom="false" style="position: static;" :show="true"
                         theme="custom" extra-key="." close-button-text="完成" @input="onInput" @delete="onDelete">
                     </van-number-keyboard>
