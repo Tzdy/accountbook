@@ -1,9 +1,9 @@
 <template>
     <div class="bg-gray-100 h-full w-full flex-col flex">
-        <van-config-provider :theme-vars="{ 'navBarHeight': '2.75rem'}">
+        <van-config-provider :theme-vars="{ 'navBarHeight': '2.75rem' }">
             <van-nav-bar title="账本记录" left-arrow safe-area-inset-top @click-left="onReturnPage" />
         </van-config-provider>
-        <van-config-provider :theme-vars="{ 'tabsLineHeight': '2.75rem'}">
+        <van-config-provider :theme-vars="{ 'tabsLineHeight': '2.75rem' }">
             <van-tabs v-model:active="indexActive">
                 <van-tab title="支出"></van-tab>
                 <van-tab title="收入"></van-tab>
@@ -16,22 +16,22 @@
                     <!-- 支出/收入/转账金额 Label -->
                     <div class="flex border-b border-b-solid border-gray-200">
                         <span class="font-600 py-4  basis-1/5 text-center whitespace-nowrap flex-shrink-0">{{
-                        labelComputed
+                                labelComputed
                         }}</span>
                         <span
                             :class="{ 'text-green-500': indexActive === 1, 'text-red-500': indexActive === 0, 'text-yellow-400': indexActive === 2 }"
                             class="flex items-center mr-0 ml-auto border-none text-3xl overflow-auto"
-                            v-text="inputComputed " type="text"></span>
+                            v-text="inputComputed" type="text"></span>
                     </div>
                     <!-- 由于有gap-y-1的间隙，会出现滚动条50% + 50% != 100%。所以大于两行的时候才显示滚动条 -->
                     <div v-if="indexActive !== 2" style="height: 8rem"
                         class="flex flex-wrap pt-2 will-change-scroll gap-y-1"
-                        :class="{'overflow-auto': takeNoteTypeList.length > 10}">
+                        :class="{ 'overflow-auto': takeNoteTypeList.length > 10 }">
                         <!-- row -->
                         <div @click="onSelectMethod(index)" v-for="(item, index) in takeNoteTypeList" :key="index"
                             class="flex flex-col items-center justify-center w-full basis-1/5 overflow-auto gap-y-1 h-1/2">
                             <div class="rounded-1/2 p-1 w-8 h-8 transition-all duration-300"
-                                :class="{ 'bg-neutral-200': !selection[index], 'bg-yellow-300': selection[index]}">
+                                :class="{ 'bg-neutral-200': !selection[index], 'bg-yellow-300': selection[index] }">
                                 <svg-icon color="black" size="2rem" :name="item.icon" />
                             </div>
                             <span class="text-xs whitespace-nowrap overflow-hidden truncate">{{ item.name }}</span>
@@ -89,14 +89,15 @@
                         </van-button>
                     </div>
                     <div v-if="indexActive !== 2" class="flex bg-light-50 py-2">
-                        <div @click="isSelectAccountShow=true"
+                        <div @click="isSelectAccountShow = true"
                             class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
                             <van-icon name="credit-pay" />
                             <span class="ellipsis">信用卡</span>
                         </div>
-                        <div class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
+                        <div @click="isSelectFamilyMemberShow = true"
+                            class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
                             <van-icon name="friends-o" />
-                            <span class="ellipsis">我</span>
+                            <span class="ellipsis">{{ selectFamilyMemberComputed }}</span>
                         </div>
                         <div class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
                             <van-icon name="photo-o" />
@@ -109,7 +110,7 @@
                     </div>
                 </div>
                 <van-config-provider
-                    :theme-vars="{ 'numberKeyboardKeyHeight': '2.2rem', 'numberKeyboardKeyFontSize': '1.5rem'}">
+                    :theme-vars="{ 'numberKeyboardKeyHeight': '2.2rem', 'numberKeyboardKeyFontSize': '1.5rem' }">
                     <van-number-keyboard :safe-area-inset-bottom="false" style="position: static;" :show="true"
                         theme="custom" extra-key="." close-button-text="完成" @input="onInput" @delete="onDelete">
                     </van-number-keyboard>
@@ -141,11 +142,53 @@
                 </div>
             </div>
         </van-action-sheet>
+        <!-- 选择成员 -->
+        <van-action-sheet v-model:show="isSelectFamilyMemberShow" cancel-text="取消" description="这是一段描述信息"
+            close-on-click-action>
+            <template #description>
+                <div class="flex items-center text-xs">
+                    <span>选择成员</span>
+                    <van-icon class="mr-2 ml-auto text-dark-800" name="setting-o" />
+                    <span class="mr-4 text-dark-800">管理</span>
+                    <van-icon class="mr-2 text-dark-800" name="plus" />
+                    <span class="mr-0 text-dark-800">添加</span>
+                </div>
+            </template>
+            <div style="height: 12rem;" class="w-full bg-light-50 overflow-auto">
+                <div class="h-1/4 flex justify-center items-center">
+                    <van-tabs @change="onfamilyMemberType" class="w-2/3" style="position: absolute;"
+                        v-model:active="selectfamilyMemberType" type="card">
+                        <van-tab title="单成员"></van-tab>
+                        <van-tab title="多成员(均分)"></van-tab>
+                    </van-tabs>
+                    <span @click="onSelectMultiFamilyMemberSubmit()" v-show="selectfamilyMemberType === 1"
+                        class="ml-auto mr-4 text-xs">完成</span>
+                </div>
+                <div class="h-3/4 overflow-auto">
+                    <div @click="onSelectFamilyMember(index)" v-for="(item, index) in selectFamilyMembers"
+                        :key="item.id"
+                        class="h-1/3 flex items-center border-b border-b-solid border-gray-200 box-border">
+                        <div class="w-4 h-4 border-1 text-xs rounded-1/2 mx-4 text-center leading-4"
+                            :style="{ borderColor: item.color, color: item.color }">{{ item.name.substring(0, 1) }}
+                        </div>
+                        <div>{{ item.name }}</div>
+                        <van-icon class="mr-4 ml-auto text-yellow-400"
+                            v-show="selectFamilyMemberIndex == index && selectfamilyMemberType === 0" size="20"
+                            name="success">
+                        </van-icon>
+                        <van-checkbox v-model="selectFamilyMemberCheck[index]" :name="item"
+                            @click="onClickMultiFamilyMember(index)" class="mr-4 ml-auto text-yellow-400"
+                            v-show="selectfamilyMemberType === 1" />
+                    </div>
+                </div>
+            </div>
+        </van-action-sheet>
     </div>
 </template>
 
 <script setup lang="ts">
 import $router from '@/router';
+import { Toast } from 'vant';
 import { ref, watch, reactive, computed } from 'vue'
 
 const indexActive = ref(0)
@@ -166,6 +209,82 @@ const selectAccountActions = ref([
     { name: '支付宝', number: 1.2 },
     { name: '微信钱包', number: 0.6 },
 ]);
+
+// 家庭成员选择
+interface FamilyMember {
+    id: number
+    name: string
+    color: string
+}
+
+const isSelectFamilyMemberShow = ref(false)
+const selectFamilyMemberIndex = ref(0) // 被选择的单成员index
+const selectfamilyMemberType = ref<0 | 1>(0) // 0 单成员 1 多成员均分
+const selectFamilyMemberCheck = ref<FamilyMember[]>([]) // 选中的，需要点击确定才能进入familyMemberSelection
+const familyMemberSelection = ref<FamilyMember[]>([]) // 选中的
+const selectFamilyMembers = ref<FamilyMember[]>([
+    { id: 0, name: '我', color: 'yellow' },
+    { id: 1, name: '爱人', color: 'red' },
+    { id: 2, name: '小宝宝', color: 'blue' },
+    { id: 3, name: '妈', color: 'pink' },
+    { id: 4, name: '爸', color: 'black' }
+])
+familyMemberSelection.value[0] = selectFamilyMembers.value[0]
+
+function onfamilyMemberType(index: number) {
+    selectFamilyMemberCheck.value = []
+    familyMemberSelection.value = []
+    if (index === 1) {
+        familyMemberSelection.value[0] = selectFamilyMembers.value[selectFamilyMemberIndex.value]
+        selectFamilyMemberCheck.value[0] = selectFamilyMembers.value[selectFamilyMemberIndex.value]
+    } else if (index === 0) {
+        familyMemberSelection.value[0] = selectFamilyMembers.value[selectFamilyMemberIndex.value]
+    }
+}
+
+function onSelectFamilyMember(index: number) {
+    if (selectfamilyMemberType.value !== 0) {
+        return
+    }
+    selectFamilyMemberIndex.value = index
+    familyMemberSelection.value[0] = selectFamilyMembers.value[selectFamilyMemberIndex.value]
+    isSelectFamilyMemberShow.value = false
+}
+let beforeMultiFamilyMemberLength = 1
+function onClickMultiFamilyMember(index: number) {
+    const nowLength = selectFamilyMemberCheck.value.filter(i => i).length
+    if (nowLength < 2 && nowLength < beforeMultiFamilyMemberLength) {
+        selectFamilyMemberCheck.value[index] = selectFamilyMembers.value[selectFamilyMemberIndex.value]
+        Toast({
+            message: '至少选择两个成员',
+            position: 'bottom',
+        });
+    } else {
+
+        beforeMultiFamilyMemberLength = nowLength
+    }
+}
+function onSelectMultiFamilyMemberSubmit() {
+    const nowLength = selectFamilyMemberCheck.value.filter(i => i).length
+    if (nowLength < 2) {
+        Toast({
+            message: '至少选择两个成员',
+            position: 'bottom',
+        });
+    } else {
+        familyMemberSelection.value = [...selectFamilyMemberCheck.value.filter(i => i)]
+        isSelectFamilyMemberShow.value = false
+    }
+}
+const selectFamilyMemberComputed = computed(() => {
+    const selectLength = familyMemberSelection.value.filter(i => i).length
+    console.log(selectLength)
+    if (selectLength === 1) {
+        return familyMemberSelection.value[0].name
+    } else {
+        return `${selectLength}人`
+    }
+})
 
 const selection = reactive<boolean[]>([])
 selection[0] = true

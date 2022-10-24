@@ -13,9 +13,9 @@ import presetWind from "@unocss/preset-wind";
 export default defineConfig({
   base: "/",
   plugins: [
-    legacy({
-      targets: "ie 11",
-    }),
+    // legacy({
+    //   targets: "ie 11",
+    // }),
     vue(),
     Components({
       resolvers: [VantResolver()],

@@ -6,6 +6,7 @@ import router from "./router";
 import SvgIconVue from "./components/SvgIcon.vue";
 import "virtual:svg-icons-register";
 import "uno.css";
+import "vant/es/toast/style";
 import { indexdbUtil } from "./model";
 indexdbUtil.connect().then(() => {
   const app = createApp(App);
