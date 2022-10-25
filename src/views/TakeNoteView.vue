@@ -74,9 +74,10 @@
             <div class="flex flex-col flex-grow-1 justify-end">
                 <div class="w-screen flex flex-col bg-gray-100 gap-y-2">
                     <div class="flex bg-light-50 gap-x-2 items-center">
-                        <div class="my-2 basis-1/4 flex items-center gap-x-2 justify-center flex-shrink-0">
+                        <div @click="calendarShow = true"
+                            class="my-2 basis-1/4 flex items-center gap-x-2 items-baseline ml-2 flex-shrink-0">
                             <van-icon name="tosend" />
-                            <span class="ellipsis">10.10</span>
+                            <span class="ellipsis">{{ dateComputed }}</span>
                         </div>
                         <div class="flex items-center gap-x-2 justify-center flex-grow-1">
                             <van-icon name="edit" />
@@ -92,7 +93,7 @@
                         <div @click="isSelectAccountShow = true"
                             class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
                             <van-icon name="credit-pay" />
-                            <span class="ellipsis">信用卡</span>
+                            <span class="ellipsis">{{ accountType.name }}</span>
                         </div>
                         <div @click="isSelectFamilyMemberShow = true"
                             class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
@@ -131,12 +132,12 @@
                 </div>
             </template>
             <div style="height: 12rem;" class="w-full bg-light-50 overflow-auto">
-                <div v-for="(item, index) in selectAccountActions" :key="index"
+                <div @click="onSelectAccountType(index)" v-for="(item, index) in selectAccountActions" :key="index"
                     class="px-3 py-3 flex items-center border-b border-b-solid border-gray-200">
                     <van-icon size="20" name="cash-back-record" />
                     <span class="ml-3 text-sm">{{ item.name }}</span>
-                    <span class="ml-8 text-xs">{{ item.number }}</span>
-                    <van-icon class="mr-0 ml-auto text-yellow-400" v-show="selectAccountIndex == index" size="20"
+                    <span class="ml-4 text-sm">{{ item.number }}</span>
+                    <van-icon class="mr-4 ml-auto text-yellow-400" v-show="selectAccountIndex == index" size="20"
                         name="success">
                     </van-icon>
                 </div>
@@ -183,6 +184,8 @@
                 </div>
             </div>
         </van-action-sheet>
+        <!-- 日期选择 -->
+        <Calendar v-model:show="calendarShow" @select="onSelectDate" />
     </div>
 </template>
 
@@ -200,15 +203,22 @@ const inputComputed = computed(() => {
 const isSelectAccountShow = ref(false)
 const selectAccountIndex = ref(0)
 const selectAccountActions = ref([
-    { name: '现金', number: 100, },
-    { name: '储蓄卡', number: 4000, },
-    { name: '支付宝', number: 1.2 },
-    { name: '微信钱包', number: 0.6 },
-    { name: '现金', number: 100, },
-    { name: '储蓄卡', number: 4000, },
-    { name: '支付宝', number: 1.2 },
-    { name: '微信钱包', number: 0.6 },
+    { id: 0, name: '现金', number: 100, },
+    { id: 1, name: '储蓄卡', number: 4000, },
+    { id: 2, name: '支付宝', number: 1.2 },
+    { id: 3, name: '微信钱包', number: 0.6 },
+    { id: 4, name: '现金', number: 100, },
+    { id: 5, name: '储蓄卡', number: 4000, },
+    { id: 6, name: '支付宝', number: 1.2 },
+    { id: 7, name: '微信钱包', number: 0.6 },
 ]);
+const accountType = ref(selectAccountActions.value[0])
+
+function onSelectAccountType(index: number) {
+    selectAccountIndex.value = index
+    accountType.value = selectAccountActions.value[selectAccountIndex.value]
+    isSelectAccountShow.value = false
+}
 
 // 家庭成员选择
 interface FamilyMember {
@@ -285,6 +295,17 @@ const selectFamilyMemberComputed = computed(() => {
         return `${selectLength}人`
     }
 })
+
+// 时间选择
+const date = ref(new Date())
+const dateComputed = computed(() => {
+    return `${(date.value.getMonth() + 1 + '').padStart(2, '0')}-${(date.value.getDate() + '').padStart(2, '0')}`
+})
+function onSelectDate(d: Date) {
+    console.log(d)
+    date.value = d
+}
+const calendarShow = ref(false)
 
 const selection = reactive<boolean[]>([])
 selection[0] = true
@@ -410,6 +431,7 @@ function onDelete() {
 // 手续费输入
 const handfeeInput = ref('')
 const handfeeElement = ref<HTMLInputElement | null>(null)
+
 
 </script>
 
