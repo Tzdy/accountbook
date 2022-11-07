@@ -102,14 +102,14 @@ function initVersionChange(transaction: IDBTransaction, goalVersion: number) {
     transaction.objectStore("account_detail_type").add({
       detail_sort_id: -1,
       account_type: 1,
-      name: item.name,
+      ...item,
     });
   });
   incomeTypeList.forEach((item) => {
     transaction.objectStore("account_detail_type").add({
       detail_sort_id: -1,
       account_type: 0,
-      name: item.name,
+      ...item,
     });
   });
 }

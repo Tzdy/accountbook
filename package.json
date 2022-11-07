@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "axios": "^0.27.2",
-    "indexdb-util": "0.0.0-beta.1",
+    "indexdb-util": "0.0.0-beta.2",
     "pinia": "^2.0.16",
     "vant": "^3.5.2",
     "vue": "^3.2.37",

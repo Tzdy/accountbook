@@ -9,8 +9,11 @@ export class AccountDetailType {
   detail_sort_id!: number;
 
   @Column()
-  account_type!: number;
+  type!: number;
 
   @Column()
   name!: string;
+
+  @Column()
+  icon!: string;
 }
