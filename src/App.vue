@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from "vue-router";
+import { RouterView } from "vue-router";
+import { useAccount } from "@/stores/account";
+const accountStore = useAccount()
+accountStore.init()
 </script>
     
 <template>
-    <RouterView v-slot="{ Component }">
+    <div v-if="!accountStore.inited">
+        loading
+    </div>
+    <RouterView v-else v-slot="{ Component }">
         <KeepAlive :include="['HomeView']">
             <component :is="Component" />
         </KeepAlive>

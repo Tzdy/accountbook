@@ -8,10 +8,11 @@ import "virtual:svg-icons-register";
 import "uno.css";
 import "vant/es/toast/style";
 import { indexdbUtil } from "./model";
+import { createPinia } from "pinia";
 indexdbUtil.connect().then(() => {
   const app = createApp(App);
 
-  // app.use(createPinia());
+  app.use(createPinia());
   app.use(router);
   app.component("SvgIcon", SvgIconVue);
   app.config.errorHandler = (err, vm, info) => {

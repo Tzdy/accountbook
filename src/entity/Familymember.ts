@@ -2,7 +2,9 @@ import { Column, Entity, PrimaryGeneratedColumn } from "indexdb-util";
 
 @Entity("familymember")
 export class FamilyMember {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({
+    autoIncrement: true,
+  })
   id!: number;
 
   @Column()
@@ -13,4 +15,7 @@ export class FamilyMember {
 
   @Column()
   debt!: number;
+
+  @Column()
+  color!: string;
 }

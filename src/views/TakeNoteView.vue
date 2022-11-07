@@ -191,9 +191,10 @@
 
 <script setup lang="ts">
 import $router from '@/router';
+import { useAccount } from '@/stores/account';
 import { Toast } from 'vant';
-import { ref, watch, reactive, computed } from 'vue'
-
+import { ref, watch, reactive, computed, toRef } from 'vue'
+const accountStore = useAccount()
 const indexActive = ref(0)
 const input = ref('')
 const inputComputed = computed(() => {
@@ -202,16 +203,7 @@ const inputComputed = computed(() => {
 
 const isSelectAccountShow = ref(false)
 const selectAccountIndex = ref(0)
-const selectAccountActions = ref([
-    { id: 0, name: '现金', number: 100, },
-    { id: 1, name: '储蓄卡', number: 4000, },
-    { id: 2, name: '支付宝', number: 1.2 },
-    { id: 3, name: '微信钱包', number: 0.6 },
-    { id: 4, name: '现金', number: 100, },
-    { id: 5, name: '储蓄卡', number: 4000, },
-    { id: 6, name: '支付宝', number: 1.2 },
-    { id: 7, name: '微信钱包', number: 0.6 },
-]);
+const selectAccountActions = toRef(accountStore, 'accountTypeList')
 const accountType = ref(selectAccountActions.value[0])
 
 function onSelectAccountType(index: number) {
@@ -232,13 +224,7 @@ const selectFamilyMemberIndex = ref(0) // 被选择的单成员index
 const selectfamilyMemberType = ref<0 | 1>(0) // 0 单成员 1 多成员均分
 const selectFamilyMemberCheck = ref<FamilyMember[]>([]) // 选中的，需要点击确定才能进入familyMemberSelection
 const familyMemberSelection = ref<FamilyMember[]>([]) // 选中的
-const selectFamilyMembers = ref<FamilyMember[]>([
-    { id: 0, name: '我', color: 'yellow' },
-    { id: 1, name: '爱人', color: 'red' },
-    { id: 2, name: '小宝宝', color: 'blue' },
-    { id: 3, name: '妈', color: 'pink' },
-    { id: 4, name: '爸', color: 'black' }
-])
+const selectFamilyMembers = toRef(accountStore, 'familymembetList')
 familyMemberSelection.value[0] = selectFamilyMembers.value[0]
 
 function onfamilyMemberType(index: number) {
@@ -323,77 +309,9 @@ const labelComputed = computed(() => {
 
 
 
-const spendTypeList = [
-    {
-        icon: 'food',
-        name: '餐饮'
-    },
-    {
-        icon: 'bus',
-        name: '交通'
-    },
-    {
-        icon: 'buy',
-        name: '购物'
-    },
-    {
-        icon: 'house',
-        name: '居住'
-    },
-    {
-        icon: 'play',
-        name: '娱乐'
-    },
-    {
-        icon: 'medicine',
-        name: '医疗'
-    },
-    {
-        icon: 'study',
-        name: '教育'
-    },
-    {
-        icon: 'contact',
-        name: '人情'
-    },
+const spendTypeList = accountStore.spendTypeList
 
-    {
-        icon: 'daily',
-        name: '日用品'
-    },
-    {
-        icon: 'other',
-        name: '其他'
-    },
-    {
-        icon: 'contact',
-        name: '人情'
-    },
-
-    {
-        icon: 'daily',
-        name: '日用品'
-    },
-    {
-        icon: 'other',
-        name: '其他'
-    },
-]
-
-const incomeTypeList = [
-    {
-        icon: 'salary',
-        name: '工资',
-    },
-    {
-        icon: 'red',
-        name: '红包'
-    },
-    {
-        icon: 'other-income',
-        name: '其它收入'
-    }
-]
+const incomeTypeList = accountStore.incomeTypeList
 
 const takeNoteTypeList = ref<any[]>([])
 watch(indexActive, val => {

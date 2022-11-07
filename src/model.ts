@@ -98,18 +98,38 @@ function initVersionChange(transaction: IDBTransaction, goalVersion: number) {
       name: "其他",
     },
   ];
+  const accountTypeList = [
+    { name: "现金", number: 0, is_allow_debt: false },
+    { name: "储蓄卡", number: 0, is_allow_debt: false },
+    { name: "支付宝", number: 0, is_allow_debt: false },
+    { name: "微信钱包", number: 0, is_allow_debt: false },
+    { name: "现金", number: 0, is_allow_debt: false },
+  ];
+  const familyMemberList = [
+    { name: "我", color: "yellow", asset: 0, debt: 0 },
+    { name: "爱人", color: "red", asset: 0, debt: 0 },
+    { name: "小宝宝", color: "blue", asset: 0, debt: 0 },
+    { name: "妈", color: "pink", asset: 0, debt: 0 },
+    { name: "爸", color: "black", asset: 0, debt: 0 },
+  ];
   spendTypeList.forEach((item) => {
     transaction.objectStore("account_detail_type").add({
       detail_sort_id: -1,
-      account_type: 1,
+      type: 1,
       ...item,
     });
   });
   incomeTypeList.forEach((item) => {
     transaction.objectStore("account_detail_type").add({
       detail_sort_id: -1,
-      account_type: 0,
+      type: 0,
       ...item,
     });
+  });
+  accountTypeList.forEach((item) => {
+    transaction.objectStore("account_type").add(item);
+  });
+  familyMemberList.forEach((item) => {
+    transaction.objectStore("familymember").add(item);
   });
 }

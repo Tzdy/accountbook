@@ -2,7 +2,9 @@ import { Column, Entity, PrimaryGeneratedColumn } from "indexdb-util";
 
 @Entity("account_detail_type")
 export class AccountDetailType {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({
+    autoIncrement: true,
+  })
   id!: number;
 
   @Column()
