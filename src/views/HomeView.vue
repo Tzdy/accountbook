@@ -42,17 +42,19 @@
                 <div class="bg-light-50 rounded-xl" v-for="(item, index) in accountList" :key="index">
                     <div
                         class="flex items-center p-4 border-b border-b-solid border-gray-200 sticky top-4 bg-light-50 z-50">
-                        <span class="font-600">{{ item.time }}</span>
-                        <span class="mr-1 ml-auto text-sm">收入:</span>
-                        <span class="mr-4 text-sm font-600">{{ item.income }}</span>
-                        <span class="mr-1 text-sm">支出:</span>
-                        <span class="mr-0 text-sm font-600">{{ item.spend }}</span>
+                        <span class="font-600">{{ formatDate(item.time) }}</span>
+                        <span v-show="accountList[index + 1] || loadEnd" class="mr-1 ml-auto text-sm">收入:</span>
+                        <span v-show="accountList[index + 1] || loadEnd" class="mr-4 text-sm font-600">{{ item.income
+                        }}</span>
+                        <span v-show="accountList[index + 1] || loadEnd" class="mr-1 text-sm">支出:</span>
+                        <span v-show="accountList[index + 1] || loadEnd" class="mr-0 text-sm font-600">{{ item.spend
+                        }}</span>
                     </div>
                     <div class="flex-col flex">
                         <div class="flex items-center p-4" v-for="(account, accountIndex) in item.account"
                             :key="accountIndex">
                             <div class="flex-shrink-0 flex-grow-0">
-                                <van-icon size="24" name="shopping-cart-o" />
+                                <svg-icon color="black" size="2rem" :name="account.icon" />
                             </div>
                             <div class="ml-3">{{ account.type }}</div>
                             <div class="mr-0 ml-auto">{{ account.number }}</div>
@@ -68,27 +70,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRaw } from 'vue'
-const accountList = ref([
-    {
-        time: '2019-05-20',
-        income: 260,
-        spend: 300,
-        account: [
-            {
-                type: '餐饮',
-                number: -200
-            },
-            {
-                type: '工资',
-                number: 100,
-            }
-        ]
-    }
-])
-const val = toRaw(accountList.value[0])
-for (let i = 0; i < 9; i++) {
-    accountList.value.push(structuredClone(val))
+import { Account } from '@/entity/Account';
+import { indexdbUtil } from '@/model';
+import { useAccount } from '@/stores/account';
+import { formatDate } from '@/util/date';
+import descimal from 'decimal.js'
+import { reactive, ref } from 'vue'
+
+interface AccountDisplay {
+    time: Date
+    income: number
+    spend: number
+    account: { type: string, number: number, icon: string }[]
 }
 const loading = ref(false)
 const uploadLoading = ref(false) // 上拉加载
@@ -102,27 +95,78 @@ function onScrollChange() {
         }
         if (!uploadLoading.value) {
             if (ele.scrollHeight - ele.offsetHeight - ele.scrollTop <= 120) {
-                uploadLoad()
+                fetchAccountList()
             }
         }
 
     }
 }
-function onRefresh() {
-    setTimeout(() => {
-        console.log('???????')
-    }, 5000)
-}
-function uploadLoad() {
+
+const accountStore = useAccount()
+const accountList = reactive<AccountDisplay[]>([])
+const loadEnd = ref(false)
+let skip = 0
+const limit = 50
+function fetchAccountList() {
+    if (loadEnd.value) {
+        return;
+    }
     uploadLoading.value = true
-    setTimeout(() => {
-        for (let i = 0; i < 9; i++) {
-            accountList.value.push(structuredClone(val))
+    indexdbUtil.manager.find(Account, {
+        limit,
+        skip: skip * limit,
+        order: [{ id: 'DESC' }]
+    }).then(list => {
+        if (list.length === 0 || list.length < limit) {
+            loadEnd.value = true
         }
-        console.log('load')
+        if (list.length === 0) {
+            return;
+        }
+        skip++;
+        if (accountList.length === 0) {
+            accountList.push({
+                time: list[0].created_time,
+                income: 0,
+                spend: 0,
+                account: []
+            })
+        }
+        list.forEach(item => {
+            const accountDetailType = accountStore.incomeTypeList.concat(accountStore.spendTypeList).find(i => i.id === item.detail_type_id)
+            if (formatDate(item.created_time) === formatDate(accountList[accountList.length - 1].time)) {
+                accountList[accountList.length - 1].account.push({
+                    type: accountDetailType?.name || '无',
+                    icon: accountDetailType?.icon || '',
+                    number: item.type === 0 ? item.account_number : -item.account_number
+                })
+            } else {
+                accountList.push({
+                    time: item.created_time,
+                    income: 0,
+                    spend: 0,
+                    account: [{
+                        type: accountDetailType?.name || '无',
+                        number: item.type === 0 ? item.account_number : -item.account_number,
+                        icon: accountDetailType?.icon || ''
+                    }]
+                })
+            }
+
+
+            if (item.type === 0) {
+                accountList[accountList.length - 1].income = descimal.sum(accountList[accountList.length - 1].income, item.account_number).toNumber()
+            } else if (item.type === 1) {
+                accountList[accountList.length - 1].spend = descimal.sum(accountList[accountList.length - 1].spend, item.account_number).toNumber()
+            }
+        })
+    }).finally(() => {
         uploadLoading.value = false
-    }, 2000)
+    })
 }
+fetchAccountList()
+
+
 </script>
 
 <style scoped>

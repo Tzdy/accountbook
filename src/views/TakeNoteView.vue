@@ -5,9 +5,9 @@
         </van-config-provider>
         <van-config-provider :theme-vars="{ 'tabsLineHeight': '2.75rem' }">
             <van-tabs v-model:active="indexActive">
-                <van-tab title="支出"></van-tab>
-                <van-tab title="收入"></van-tab>
-                <van-tab title="转账"></van-tab>
+                <van-tab :name="1" title="支出"></van-tab>
+                <van-tab :name="0" title="收入"></van-tab>
+                <van-tab :name="2" title="转账"></van-tab>
             </van-tabs>
         </van-config-provider>
         <div class="h-full flex flex-col">
@@ -19,7 +19,7 @@
                                 labelComputed
                         }}</span>
                         <span
-                            :class="{ 'text-green-500': indexActive === 1, 'text-red-500': indexActive === 0, 'text-yellow-400': indexActive === 2 }"
+                            :class="{ 'text-green-500': indexActive === 0, 'text-red-500': indexActive === 1, 'text-yellow-400': indexActive === 2 }"
                             class="flex items-center mr-0 ml-auto border-none text-3xl overflow-auto"
                             v-text="inputComputed" type="text"></span>
                     </div>
@@ -81,7 +81,7 @@
                         </div>
                         <div class="flex items-center gap-x-2 justify-center flex-grow-1">
                             <van-icon name="edit" />
-                            <input @focus="isNoteFocus = true" @blur="isNoteFocus = false"
+                            <input v-model="description" @focus="isNoteFocus = true" @blur="isNoteFocus = false"
                                 class="h-full w-full border-none" placeholder="备注" type="search">
                         </div>
                         <van-button v-show="isNoteFocus" class="flex-shrink-0" size="mini"
@@ -113,7 +113,8 @@
                 <van-config-provider
                     :theme-vars="{ 'numberKeyboardKeyHeight': '2.2rem', 'numberKeyboardKeyFontSize': '1.5rem' }">
                     <van-number-keyboard :safe-area-inset-bottom="false" style="position: static;" :show="true"
-                        theme="custom" extra-key="." close-button-text="完成" @input="onInput" @delete="onDelete">
+                        theme="custom" extra-key="." @close="onSubmit" close-button-text="完成" @input="onInput"
+                        @delete="onDelete">
                     </van-number-keyboard>
                 </van-config-provider>
             </div>
@@ -190,13 +191,16 @@
 </template>
 
 <script setup lang="ts">
+import { Account } from '@/entity/Account';
+import { indexdbUtil } from '@/model';
 import $router from '@/router';
 import { useAccount } from '@/stores/account';
 import { Toast } from 'vant';
 import { ref, watch, reactive, computed, toRef } from 'vue'
 const accountStore = useAccount()
-const indexActive = ref(0)
+const indexActive = ref(1)
 const input = ref('')
+const description = ref('')
 const inputComputed = computed(() => {
     return input.value ? input.value : '0.00'
 })
@@ -293,6 +297,7 @@ function onSelectDate(d: Date) {
 }
 const calendarShow = ref(false)
 
+// 账单详情
 const selection = reactive<boolean[]>([])
 selection[0] = true
 function onSelectMethod(index: number) {
@@ -319,10 +324,10 @@ watch(indexActive, val => {
     selection[0] = true
     switch (val) {
         case 0:
-            takeNoteTypeList.value = spendTypeList
+            takeNoteTypeList.value = incomeTypeList
             break
         case 1:
-            takeNoteTypeList.value = incomeTypeList
+            takeNoteTypeList.value = spendTypeList
             break
         default:
             takeNoteTypeList.value = []
@@ -344,6 +349,22 @@ function onInput(val: string) {
 
 function onDelete() {
     input.value = input.value.slice(0, input.value.length - 1)
+}
+
+function onSubmit() {
+    indexdbUtil.manager.insertOne(Account, {
+        account_number: Number(input.value.split('.').map((i, index) => {
+            if (index === 1) {
+                return i.substring(0, 2)
+            }
+            return i
+        }).join('.')),
+        account_type_id: accountType.value.id,
+        created_time: date.value,
+        description: description.value,
+        detail_type_id: takeNoteTypeList.value[selection.findIndex(item => item)].id,
+        type: indexActive.value
+    })
 }
 
 // 手续费输入
