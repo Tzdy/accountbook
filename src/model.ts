@@ -1,5 +1,6 @@
 import { IndexDBUtil } from "indexdb-util";
 import { Account } from "./entity/Account";
+import { AccountDay } from "./entity/AccountDay";
 import { AccountDetailType } from "./entity/AccountDetailType";
 import { AccountFamilyMember } from "./entity/AccountFamilyMember";
 import { AccountType } from "./entity/AccountType";
@@ -11,6 +12,7 @@ export const indexdbUtil = new IndexDBUtil({
   version: 1,
   entityList: [
     Account,
+    AccountDay,
     AccountDetailType,
     AccountFamilyMember,
     AccountType,

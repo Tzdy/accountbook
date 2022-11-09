@@ -8,6 +8,9 @@ export class Account {
   id!: number;
 
   @Column()
+  account_day_id!: number;
+
+  @Column()
   account_number!: number;
 
   @Column()

@@ -43,11 +43,11 @@
                     <div
                         class="flex items-center p-4 border-b border-b-solid border-gray-200 sticky top-4 bg-light-50 z-50">
                         <span class="font-600">{{ formatDate(item.time) }}</span>
-                        <span v-show="accountList[index + 1] || loadEnd" class="mr-1 ml-auto text-sm">收入:</span>
-                        <span v-show="accountList[index + 1] || loadEnd" class="mr-4 text-sm font-600">{{ item.income
+                        <span class="mr-1 ml-auto text-sm">收入:</span>
+                        <span class="mr-4 text-sm font-600">{{ item.income
                         }}</span>
-                        <span v-show="accountList[index + 1] || loadEnd" class="mr-1 text-sm">支出:</span>
-                        <span v-show="accountList[index + 1] || loadEnd" class="mr-0 text-sm font-600">{{ item.spend
+                        <span class="mr-1 text-sm">支出:</span>
+                        <span class="mr-0 text-sm font-600">{{ item.spend
                         }}</span>
                     </div>
                     <div class="flex-col flex">
@@ -56,8 +56,11 @@
                             <div class="flex-shrink-0 flex-grow-0">
                                 <svg-icon color="black" size="2rem" :name="account.icon" />
                             </div>
-                            <div class="ml-3">{{ account.type }}</div>
-                            <div class="mr-0 ml-auto">{{ account.number }}</div>
+                            <div class="ml-3">{{ account.detailTypeName }}</div>
+                            <div class="mr-0 ml-auto">
+                                <span v-if="account.type === 1">-</span>
+                                <span>{{ account.number }}</span>
+                            </div>
                         </div>
                     </div>
                     <div class="w-full h-4 bg-gray-100"></div>
@@ -75,14 +78,8 @@ import { indexdbUtil } from '@/model';
 import { useAccount } from '@/stores/account';
 import { formatDate } from '@/util/date';
 import descimal from 'decimal.js'
-import { reactive, ref } from 'vue'
+import { reactive, ref, toRef } from 'vue'
 
-interface AccountDisplay {
-    time: Date
-    income: number
-    spend: number
-    account: { type: string, number: number, icon: string }[]
-}
 const loading = ref(false)
 const uploadLoading = ref(false) // 上拉加载
 const scrollElement = ref<HTMLElement | null>(null)
@@ -95,7 +92,7 @@ function onScrollChange() {
         }
         if (!uploadLoading.value) {
             if (ele.scrollHeight - ele.offsetHeight - ele.scrollTop <= 120) {
-                fetchAccountList()
+                accountStore.fetchAccount()
             }
         }
 
@@ -103,68 +100,8 @@ function onScrollChange() {
 }
 
 const accountStore = useAccount()
-const accountList = reactive<AccountDisplay[]>([])
-const loadEnd = ref(false)
-let skip = 0
-const limit = 50
-function fetchAccountList() {
-    if (loadEnd.value) {
-        return;
-    }
-    uploadLoading.value = true
-    indexdbUtil.manager.find(Account, {
-        limit,
-        skip: skip * limit,
-        order: [{ id: 'DESC' }]
-    }).then(list => {
-        if (list.length === 0 || list.length < limit) {
-            loadEnd.value = true
-        }
-        if (list.length === 0) {
-            return;
-        }
-        skip++;
-        if (accountList.length === 0) {
-            accountList.push({
-                time: list[0].created_time,
-                income: 0,
-                spend: 0,
-                account: []
-            })
-        }
-        list.forEach(item => {
-            const accountDetailType = accountStore.incomeTypeList.concat(accountStore.spendTypeList).find(i => i.id === item.detail_type_id)
-            if (formatDate(item.created_time) === formatDate(accountList[accountList.length - 1].time)) {
-                accountList[accountList.length - 1].account.push({
-                    type: accountDetailType?.name || '无',
-                    icon: accountDetailType?.icon || '',
-                    number: item.type === 0 ? item.account_number : -item.account_number
-                })
-            } else {
-                accountList.push({
-                    time: item.created_time,
-                    income: 0,
-                    spend: 0,
-                    account: [{
-                        type: accountDetailType?.name || '无',
-                        number: item.type === 0 ? item.account_number : -item.account_number,
-                        icon: accountDetailType?.icon || ''
-                    }]
-                })
-            }
-
-
-            if (item.type === 0) {
-                accountList[accountList.length - 1].income = descimal.sum(accountList[accountList.length - 1].income, item.account_number).toNumber()
-            } else if (item.type === 1) {
-                accountList[accountList.length - 1].spend = descimal.sum(accountList[accountList.length - 1].spend, item.account_number).toNumber()
-            }
-        })
-    }).finally(() => {
-        uploadLoading.value = false
-    })
-}
-fetchAccountList()
+const accountList = toRef(accountStore, 'accountList')
+accountStore.fetchAccount()
 
 
 </script>
