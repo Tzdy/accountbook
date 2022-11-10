@@ -191,8 +191,6 @@
 </template>
 
 <script setup lang="ts">
-import { Account } from '@/entity/Account';
-import { indexdbUtil } from '@/model';
 import $router from '@/router';
 import { useAccount } from '@/stores/account';
 import { Toast } from 'vant';

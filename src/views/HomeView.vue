@@ -28,7 +28,7 @@
             <!-- 操作 -->
             <div class="mt-4 flex bg-gray-50 mx-3">
                 <router-link class="w-full" :to="{ name: 'takenote' }">
-                    <van-button class="w-full" size="medium" color="#001938">
+                    <van-button class="w-full" size="normal" color="#001938">
                         <van-icon class="align-middle" size="20" name="balance-list-o" />
                         <span class="ml-2">记一笔</span>
                     </van-button>
@@ -73,12 +73,9 @@
 </template>
 
 <script setup lang="ts">
-import { Account } from '@/entity/Account';
-import { indexdbUtil } from '@/model';
 import { useAccount } from '@/stores/account';
 import { formatDate } from '@/util/date';
-import descimal from 'decimal.js'
-import { reactive, ref, toRef } from 'vue'
+import { ref, toRef } from 'vue'
 
 const loading = ref(false)
 const uploadLoading = ref(false) // 上拉加载
