@@ -3,7 +3,7 @@ import { AccountDetailType } from "@/entity/AccountDetailType";
 import { AccountType } from "@/entity/AccountType";
 import { FamilyMember } from "@/entity/Familymember";
 import { indexdbUtil } from "@/model";
-import { betweenDate } from "@/util/date";
+import { betweenDate, betweenMonth, formatDate } from "@/util/date";
 import { defineStore } from "pinia";
 import descimal from "decimal.js";
 import { AccountDay } from "@/entity/AccountDay";
@@ -27,7 +27,12 @@ export const useAccount = defineStore("account", {
     inited: false,
     skip: 0,
     limit: 50,
-    fetchEnd: false,
+    fetchEnd: false, // 首页是否已经加载所有account信息
+
+    date: new Date(),
+    monthSpend: 0,
+    monthIncome: 0,
+
     accountList: [] as AccountDisplay[],
     incomeTypeList: [] as AccountDetailType[],
     spendTypeList: [] as AccountDetailType[],
@@ -51,7 +56,45 @@ export const useAccount = defineStore("account", {
       });
       this.accountTypeList = accountTypeList;
       this.familymembetList = familyMemberList;
+
+      const betweenDt = betweenMonth(new Date());
+      const monthAccountList = await indexdbUtil.manager.find(Account, {
+        where: {
+          created_time: Between(betweenDt[0], betweenDt[1], false, true),
+        },
+      });
+      this.monthSpend = monthAccountList.reduce((a, b) => {
+        if (b.type === 1) {
+          return a + b.account_number;
+        }
+        return a;
+      }, 0);
+      this.monthIncome = monthAccountList.reduce((a, b) => {
+        if (b.type === 0) {
+          return a + b.account_number;
+        }
+        return a;
+      }, 0);
       this.inited = true;
+    },
+
+    // 首页顶部的月度信息更新
+    updateMonthInfo(
+      account: Pick<Account, "type" | "account_number" | "created_time">
+    ) {
+      // 月底最后一天11:59:59打开，跨月后需要更新一下this.date
+      if (formatDate(this.date) !== formatDate(new Date())) {
+        this.date = new Date();
+      }
+      // 不是在当月添加
+      if (formatDate(account.created_time) !== formatDate(this.date)) {
+        return;
+      }
+      if (account.type === 0) {
+        this.monthIncome += account.account_number;
+      } else if (account.type === 1) {
+        this.monthSpend += account.account_number;
+      }
     },
 
     async fetchAccount() {
@@ -132,6 +175,8 @@ export const useAccount = defineStore("account", {
         account_day_id: day.id,
         ...account,
       });
+
+      this.updateMonthInfo(account);
       this.insert(account, day, Number(accountId));
     },
 

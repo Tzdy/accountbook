@@ -7,7 +7,7 @@
             <!-- 支出展示 -->
             <div style="background: url(back.jpeg)" class="flex-col flex rounded-xl px-4 pb-4 relative mx-3">
                 <div class="-mt-1.5rem absolute top-0">
-                    <span class="font-600 text-6xl">10</span>
+                    <span class="font-600 text-6xl">{{ accountStore.date.getMonth() + 1 }}</span>
                     <span class="ml-1 text-sm">月支出</span>
                 </div>
                 <div class="flex mt-2">
@@ -16,13 +16,22 @@
                     </div>
                 </div>
                 <div class="mt-2">
-                    <span class="text-2xl">¥0.00</span>
+                    <span class="text-2xl">
+                        <span>¥</span>
+                        <span>{{ accountStore.monthSpend }}</span>
+                    </span>
                 </div>
                 <div class="mt-4 flex items-center text-sm">
                     <span>收入</span>
-                    <span class="ml-2">¥0.00</span>
+                    <span class="ml-2">
+                        <span>¥</span>
+                        <span>{{ accountStore.monthIncome }}</span>
+                    </span>
                     <span class="mr-2 ml-auto">结余</span>
-                    <span class="mr-0">¥0.00</span>
+                    <span class="mr-0">
+                        <span>¥</span>
+                        <span>{{ accountStore.monthIncome - accountStore.monthSpend }}</span>
+                    </span>
                 </div>
             </div>
             <!-- 操作 -->
@@ -73,8 +82,11 @@
 </template>
 
 <script setup lang="ts">
+import { Account } from '@/entity/Account';
+import { indexdbUtil } from '@/model';
 import { useAccount } from '@/stores/account';
-import { formatDate } from '@/util/date';
+import { betweenMonth, formatDate } from '@/util/date';
+import { Between } from 'indexdb-util';
 import { ref, toRef } from 'vue'
 
 const loading = ref(false)
@@ -99,7 +111,6 @@ function onScrollChange() {
 const accountStore = useAccount()
 const accountList = toRef(accountStore, 'accountList')
 accountStore.fetchAccount()
-
 
 </script>
 
