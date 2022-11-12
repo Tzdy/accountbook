@@ -349,21 +349,9 @@ function onDelete() {
     input.value = input.value.slice(0, input.value.length - 1)
 }
 
-function onSubmit() {
-    // indexdbUtil.manager.insertOne(Account, {
-    //     account_number: Number(input.value.split('.').map((i, index) => {
-    //         if (index === 1) {
-    //             return i.substring(0, 2)
-    //         }
-    //         return i
-    //     }).join('.')),
-    //     account_type_id: accountType.value.id,
-    //     created_time: date.value,
-    //     description: description.value,
-    //     detail_type_id: takeNoteTypeList.value[selection.findIndex(item => item)].id,
-    //     type: indexActive.value
-    // })
-    accountStore.addAccount({
+async function onSubmit() {
+    await accountStore.addAccount({
+        // 不四舍五入保留两位小数
         account_number: Number(input.value.split('.').map((i, index) => {
             if (index === 1) {
                 return i.substring(0, 2)

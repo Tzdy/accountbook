@@ -55,12 +55,16 @@ export const useAccount = defineStore("account", {
     },
 
     async fetchAccount() {
+      if (this.fetchEnd) {
+        return;
+      }
       const list = await indexdbUtil.manager.find(Account, {
         limit: this.limit,
         skip: this.skip * this.limit,
         order: [{ created_time: "DESC" }],
       });
       if (list.length === 0) {
+        this.fetchEnd = true;
         return;
       }
       if (list.length < this.limit) {
