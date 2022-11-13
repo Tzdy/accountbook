@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { RouterView } from "vue-router";
 import { useAccount } from "@/stores/account";
+import { ref } from "vue";
 const accountStore = useAccount()
 accountStore.init()
+
 </script>
     
 <template>

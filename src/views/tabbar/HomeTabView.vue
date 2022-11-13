@@ -1,5 +1,4 @@
 <template>
-    <van-nav-bar safe-area-inset-top title="账本记录" />
     <div ref="scrollElement"
         class="main-container-height box-border overflow-x-hidden overflow-y-auto will-change-scroll bg-gray-100 parallax-container"
         @scroll="onScrollChange()">
@@ -82,13 +81,10 @@
 </template>
 
 <script setup lang="ts">
-import { Account } from '@/entity/Account';
-import { indexdbUtil } from '@/model';
 import { useAccount } from '@/stores/account';
-import { betweenMonth, formatDate } from '@/util/date';
-import { Between } from 'indexdb-util';
+import { formatDate } from '@/util/date';
 import { ref, toRef } from 'vue'
-
+const tabActive = ref(0)
 const loading = ref(false)
 const uploadLoading = ref(false) // 上拉加载
 const scrollElement = ref<HTMLElement | null>(null)
@@ -116,11 +112,11 @@ accountStore.fetchAccount()
 
 <style scoped>
 .main-container-height {
-    height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height));
+    height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - var(--van-tabbar-height));
 }
 
 .min-main-container-height {
-    min-height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height));
+    min-height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - var(--van-tabbar-height));
 }
 
 .parallax-container {
