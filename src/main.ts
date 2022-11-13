@@ -11,7 +11,6 @@ import { indexdbUtil } from "./model";
 import { createPinia } from "pinia";
 indexdbUtil.connect().then(() => {
   const app = createApp(App);
-
   app.use(createPinia());
   app.use(router);
   app.component("SvgIcon", SvgIconVue);

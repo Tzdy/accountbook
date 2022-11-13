@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "vite --host",
     "dev:prod": "vite --mode=production --host",
+    "test": "vitest",
     "build": "run-p type-check build-only",
     "preview": "vite preview --port 4173",
     "build-only": "vite build",
@@ -38,6 +39,7 @@
     "unplugin-vue-components": "^0.21.1",
     "vite": "^3.0.1",
     "vite-plugin-svg-icons": "^2.0.1",
+    "vitest": "^0.25.1",
     "vue-tsc": "^0.38.8"
   }
 }

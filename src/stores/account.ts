@@ -5,9 +5,11 @@ import { FamilyMember } from "@/entity/Familymember";
 import { indexdbUtil } from "@/model";
 import { betweenDate, betweenMonth, formatDate } from "@/util/date";
 import { defineStore } from "pinia";
-import descimal from "decimal.js";
+import descimal, { Decimal } from "decimal.js";
 import { AccountDay } from "@/entity/AccountDay";
 import { Between } from "indexdb-util";
+import { AccountFamilyMember } from "@/entity/AccountFamilyMember";
+import { divideNumber } from "@/util/number";
 
 interface AccountDisplay {
   time: Date;
@@ -97,6 +99,91 @@ export const useAccount = defineStore("account", {
       }
     },
 
+    async updateAccountType(
+      account: Pick<
+        Account,
+        "type" | "account_number" | "created_time" | "account_type_id"
+      >
+    ) {
+      const accountType = this.accountTypeList.find(
+        (i) => i.id === account.account_type_id
+      );
+      if (accountType) {
+        if (account.type === 0) {
+          accountType.number += account.account_number;
+        } else if (account.type === 1) {
+          accountType.number -= account.account_number;
+        }
+        await indexdbUtil.manager.updateOne(AccountType, accountType, {
+          where: {
+            id: accountType.id,
+          },
+        });
+      }
+    },
+
+    async updateFamilyMember(
+      accountId: number,
+      account: Pick<
+        Account,
+        "type" | "account_number" | "created_time" | "account_type_id"
+      >,
+      familyMemberSelection: Pick<FamilyMember, "id" | "name">[]
+    ) {
+      const arr = divideNumber(
+        account.account_number,
+        familyMemberSelection.length
+      );
+      const accountFamilyMemberList: Omit<AccountFamilyMember, "id">[] =
+        familyMemberSelection.map((i, index) => {
+          return {
+            account_id: accountId,
+            familymember_id: i.id,
+            type: account.type,
+            number: arr[index],
+          };
+        });
+      await indexdbUtil.manager.insert(
+        AccountFamilyMember,
+        accountFamilyMemberList
+      );
+
+      for (const item of accountFamilyMemberList) {
+        const familyMember = await indexdbUtil.manager.findOne(FamilyMember, {
+          where: {
+            id: item.familymember_id,
+          },
+        });
+        if (familyMember) {
+          if (account.type === 0) {
+            await indexdbUtil.manager.updateOne(
+              FamilyMember,
+              {
+                asset: Decimal.sum(familyMember.asset, item.number).toNumber(),
+              },
+              {
+                where: {
+                  id: item.familymember_id,
+                },
+              }
+            );
+          } else if (account.type === 1) {
+            await indexdbUtil.manager.updateOne(
+              FamilyMember,
+              {
+                debt: Decimal.sum(familyMember.debt, item.number).toNumber(),
+              },
+              {
+                where: {
+                  id: item.familymember_id,
+                },
+              }
+            );
+          }
+        }
+      }
+    },
+
     async fetchAccount() {
       if (this.fetchEnd) {
         return;
@@ -135,7 +222,10 @@ export const useAccount = defineStore("account", {
       }
     },
 
-    async addAccount(account: Omit<Account, "id" | "account_day_id">) {
+    async addAccount(
+      account: Omit<Account, "id" | "account_day_id">,
+      familyMemberSelection: Pick<FamilyMember, "id" | "name">[]
+    ) {
       const betweenDt = betweenDate(account.created_time);
       let day = await indexdbUtil.manager.findOne(AccountDay, {
         where: {
@@ -177,6 +267,12 @@ export const useAccount = defineStore("account", {
       });
 
       this.updateMonthInfo(account);
+      await this.updateAccountType(account);
+      await this.updateFamilyMember(
+        Number(accountId),
+        account,
+        familyMemberSelection
+      );
       this.insert(account, day, Number(accountId));
     },
 

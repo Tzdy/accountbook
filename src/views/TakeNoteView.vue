@@ -178,7 +178,7 @@
                             v-show="selectFamilyMemberIndex == index && selectfamilyMemberType === 0" size="20"
                             name="success">
                         </van-icon>
-                        <van-checkbox v-model="selectFamilyMemberCheck[index]" :name="item"
+                        <van-checkbox v-model="selectFamilyMemberCheck[index]" :name="item.id"
                             @click="onClickMultiFamilyMember(index)" class="mr-4 ml-auto text-yellow-400"
                             v-show="selectfamilyMemberType === 1" />
                     </div>
@@ -193,6 +193,7 @@
 <script setup lang="ts">
 import $router from '@/router';
 import { useAccount } from '@/stores/account';
+import { divideNumber, trunc } from '@/util/number';
 import { Toast } from 'vant';
 import { ref, watch, reactive, computed, toRef } from 'vue'
 const accountStore = useAccount()
@@ -224,7 +225,7 @@ interface FamilyMember {
 const isSelectFamilyMemberShow = ref(false)
 const selectFamilyMemberIndex = ref(0) // 被选择的单成员index
 const selectfamilyMemberType = ref<0 | 1>(0) // 0 单成员 1 多成员均分
-const selectFamilyMemberCheck = ref<FamilyMember[]>([]) // 选中的，需要点击确定才能进入familyMemberSelection
+const selectFamilyMemberCheck = ref<boolean[]>([]) // 选中的，需要点击确定才能进入familyMemberSelection
 const familyMemberSelection = ref<FamilyMember[]>([]) // 选中的
 const selectFamilyMembers = toRef(accountStore, 'familymembetList')
 familyMemberSelection.value[0] = selectFamilyMembers.value[0]
@@ -232,10 +233,10 @@ familyMemberSelection.value[0] = selectFamilyMembers.value[0]
 function onfamilyMemberType(index: number) {
     selectFamilyMemberCheck.value = []
     familyMemberSelection.value = []
-    if (index === 1) {
+    if (index === 1) { // 多成员
         familyMemberSelection.value[0] = selectFamilyMembers.value[selectFamilyMemberIndex.value]
-        selectFamilyMemberCheck.value[0] = selectFamilyMembers.value[selectFamilyMemberIndex.value]
-    } else if (index === 0) {
+        selectFamilyMemberCheck.value[0] = true
+    } else if (index === 0) { // 单成员
         familyMemberSelection.value[0] = selectFamilyMembers.value[selectFamilyMemberIndex.value]
     }
 }
@@ -252,7 +253,7 @@ let beforeMultiFamilyMemberLength = 1
 function onClickMultiFamilyMember(index: number) {
     const nowLength = selectFamilyMemberCheck.value.filter(i => i).length
     if (nowLength < 2 && nowLength < beforeMultiFamilyMemberLength) {
-        selectFamilyMemberCheck.value[index] = selectFamilyMembers.value[selectFamilyMemberIndex.value]
+        selectFamilyMemberCheck.value[index] = true
         Toast({
             message: '至少选择两个成员',
             position: 'bottom',
@@ -270,13 +271,12 @@ function onSelectMultiFamilyMemberSubmit() {
             position: 'bottom',
         });
     } else {
-        familyMemberSelection.value = [...selectFamilyMemberCheck.value.filter(i => i)]
+        familyMemberSelection.value = [...selectFamilyMemberCheck.value.map((checked, index) => checked && selectFamilyMembers.value[index]).filter(i => i) as FamilyMember[]]
         isSelectFamilyMemberShow.value = false
     }
 }
 const selectFamilyMemberComputed = computed(() => {
     const selectLength = familyMemberSelection.value.filter(i => i).length
-    console.log(selectLength)
     if (selectLength === 1) {
         return familyMemberSelection.value[0].name
     } else {
@@ -342,6 +342,10 @@ function onReturnPage() {
 }
 
 function onInput(val: string) {
+    const dotIndex = String(input.value + val).indexOf('.')
+    if (dotIndex !== -1 && String(input.value + val).length - 1 - dotIndex > 2) {
+        return Toast.fail('只能处理小数点后两位')
+    }
     input.value += val
 }
 
@@ -350,20 +354,28 @@ function onDelete() {
 }
 
 async function onSubmit() {
-    await accountStore.addAccount({
-        // 不四舍五入保留两位小数
-        account_number: Number(input.value.split('.').map((i, index) => {
-            if (index === 1) {
-                return i.substring(0, 2)
-            }
-            return i
-        }).join('.')),
-        account_type_id: accountType.value.id,
-        created_time: date.value,
-        description: description.value,
-        detail_type_id: takeNoteTypeList.value[selection.findIndex(item => item)].id,
-        type: indexActive.value
-    })
+    try {
+        const account = {
+            // 不四舍五入保留两位小数
+            account_number: Number(input.value.split('.').map((i, index) => {
+                if (index === 1) {
+                    return i.substring(0, 2)
+                }
+                return i
+            }).join('.')),
+            account_type_id: accountType.value.id,
+            created_time: date.value,
+            description: description.value,
+            detail_type_id: takeNoteTypeList.value[selection.findIndex(item => item)].id,
+            type: indexActive.value
+        }
+        // 如果不能平分这个函数会报错
+        divideNumber(account.account_number, familyMemberSelection.value.length)
+        await accountStore.addAccount(account, familyMemberSelection.value)
+    } catch (err: any) {
+        console.log(familyMemberSelection.value)
+        Toast.fail(err.message)
+    }
 }
 
 // 手续费输入

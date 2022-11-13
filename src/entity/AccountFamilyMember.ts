@@ -14,5 +14,9 @@ export class AccountFamilyMember {
   familymember_id!: number;
 
   @Column()
+  // 0 收入 1 支出
+  type!: number;
+
+  @Column()
   number!: number;
 }
