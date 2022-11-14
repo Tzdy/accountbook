@@ -89,7 +89,12 @@ export const useAccount = defineStore("account", {
         this.date = new Date();
       }
       // 不是在当月添加
-      if (formatDate(account.created_time) !== formatDate(this.date)) {
+      if (
+        !(
+          account.created_time.getFullYear() === this.date.getFullYear() &&
+          account.created_time.getMonth() + 1 === this.date.getMonth() + 1
+        )
+      ) {
         return;
       }
       if (account.type === 0) {

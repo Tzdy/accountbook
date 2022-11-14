@@ -12,7 +12,7 @@ import presetWind from "@unocss/preset-wind";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "/",
+  base: "/account/",
   plugins: [
     // legacy({
     //   targets: "ie 11",
