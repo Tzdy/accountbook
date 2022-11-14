@@ -13,6 +13,11 @@ const router = createRouter({
       name: "takenote",
       component: () => import("@/views/TakeNoteView.vue"),
     },
+    {
+      path: "/accountDetail",
+      name: "accountDetail",
+      component: () => import("@/views/AccountDetail.vue"),
+    },
     // {
     //   path: "/login",
     //   name: "login",

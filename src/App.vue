@@ -22,6 +22,15 @@ accountStore.init()
 * {
     padding: 0;
     margin: 0;
+    text-decoration: none;
+}
+
+a:visited {
+    color: inherit
+}
+
+a {
+    color: inherit
 }
 
 body,

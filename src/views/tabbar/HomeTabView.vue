@@ -59,17 +59,19 @@
                         }}</span>
                     </div>
                     <div class="flex-col flex">
-                        <div class="flex items-center p-4" v-for="(account, accountIndex) in item.account"
-                            :key="accountIndex">
-                            <div class="flex-shrink-0 flex-grow-0">
-                                <svg-icon color="black" size="2rem" :name="account.icon" />
+                        <router-link v-for="(account, accountIndex) in item.account" :key="accountIndex"
+                            :to="{ name: 'accountDetail', query: { id: account.id } }">
+                            <div class="flex items-center p-4">
+                                <div class="flex-shrink-0 flex-grow-0">
+                                    <svg-icon color="black" size="2rem" :name="account.icon" />
+                                </div>
+                                <div class="ml-3">{{ account.detailTypeName }}</div>
+                                <div class="mr-0 ml-auto">
+                                    <span v-if="account.type === 1">-</span>
+                                    <span>{{ account.number }}</span>
+                                </div>
                             </div>
-                            <div class="ml-3">{{ account.detailTypeName }}</div>
-                            <div class="mr-0 ml-auto">
-                                <span v-if="account.type === 1">-</span>
-                                <span>{{ account.number }}</span>
-                            </div>
-                        </div>
+                        </router-link>
                     </div>
                     <div class="w-full h-4 bg-gray-100"></div>
                 </div>
