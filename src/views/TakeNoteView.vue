@@ -7,7 +7,7 @@
             <van-tabs v-model:active="indexActive">
                 <van-tab :name="1" title="支出"></van-tab>
                 <van-tab :name="0" title="收入"></van-tab>
-                <van-tab :name="2" title="转账"></van-tab>
+                <van-tab v-if="!isModify" :name="2" title="转账"></van-tab>
             </van-tabs>
         </van-config-provider>
         <div class="h-full flex flex-col">
@@ -191,11 +191,15 @@
 </template>
 
 <script setup lang="ts">
+import type { Account } from '@/entity/Account';
+import type { AccountType } from '@/entity/AccountType';
 import $router from '@/router';
 import { useAccount } from '@/stores/account';
-import { divideNumber, trunc } from '@/util/number';
+import { useAccountEdit } from '@/stores/accountEdit';
+import { divideNumber } from '@/util/number';
 import { Toast } from 'vant';
-import { ref, watch, reactive, computed, toRef } from 'vue'
+import { ref, watch, reactive, computed, toRef, nextTick } from 'vue'
+
 const accountStore = useAccount()
 const indexActive = ref(1)
 const input = ref('')
@@ -371,7 +375,18 @@ async function onSubmit() {
         }
         // 如果不能平分这个函数会报错
         divideNumber(account.account_number, familyMemberSelection.value.length)
-        await accountStore.addAccount(account, familyMemberSelection.value)
+        if (isModify.value) {
+            if (!oldAccount) {
+                return;
+            }
+            await accountStore.updateAccount(oldAccount, {
+                id: oldAccount.id,
+                account_day_id: oldAccount.account_day_id,
+                ...account,
+            }, familyMemberSelection.value)
+        } else {
+            await accountStore.addAccount(account, familyMemberSelection.value)
+        }
     } catch (err: any) {
         console.log(familyMemberSelection.value)
         Toast.fail(err.message)
@@ -382,6 +397,38 @@ async function onSubmit() {
 const handfeeInput = ref('')
 const handfeeElement = ref<HTMLInputElement | null>(null)
 
+const accountEditStore = useAccountEdit()
+const isModify = computed(() => {
+    return accountEditStore.modify
+})
+// 辅助修改
+let oldAccount: Account | null = null
+// 修改初始化
+if (isModify.value) {
+    oldAccount = accountEditStore.account
+    if (oldAccount) {
+
+        indexActive.value = oldAccount.type
+        input.value = String(oldAccount.account_number)
+        description.value = oldAccount.description
+        accountType.value = selectAccountActions.value.find(i => i.id === oldAccount?.account_type_id) as AccountType
+        date.value = oldAccount.created_time
+        accountEditStore.familyMemberList.forEach(i => {
+            selectFamilyMemberCheck.value[selectFamilyMembers.value.findIndex(s => s.id === i.id)] = true
+        })
+        // 成员大于1
+        if (accountEditStore.familyMemberList.length > 1) {
+            familyMemberSelection.value = [...selectFamilyMemberCheck.value.map((checked, index) => checked && selectFamilyMembers.value[index]).filter(i => i) as FamilyMember[]]
+            selectfamilyMemberType.value = 1
+        } else {
+            selectfamilyMemberType.value = 0
+            selectFamilyMemberIndex.value = selectFamilyMembers.value.findIndex(s => s.id === accountEditStore.familyMemberList[0].id)
+        }
+        nextTick(() => {
+            onSelectMethod(takeNoteTypeList.value.findIndex(i => i.id === oldAccount?.detail_type_id))
+        })
+    }
+}
 
 </script>
 

@@ -35,12 +35,10 @@
             </div>
             <!-- 操作 -->
             <div class="mt-4 flex bg-gray-50 mx-3">
-                <router-link class="w-full" :to="{ name: 'takenote' }">
-                    <van-button class="w-full" size="normal" color="#001938">
-                        <van-icon class="align-middle" size="20" name="balance-list-o" />
-                        <span class="ml-2">记一笔</span>
-                    </van-button>
-                </router-link>
+                <van-button @click="onNavToEdit" class="w-full" size="normal" color="#001938">
+                    <van-icon class="align-middle" size="20" name="balance-list-o" />
+                    <span class="ml-2">记一笔</span>
+                </van-button>
             </div>
         </div>
         <div class="min-main-container-height flex flex-col bg-gray-100 relative z-10">
@@ -85,7 +83,9 @@
 <script setup lang="ts">
 import { useAccount } from '@/stores/account';
 import { formatDate } from '@/util/date';
+import { useRouter } from 'vue-router'
 import { ref, toRef } from 'vue'
+import { useAccountEdit } from '@/stores/accountEdit';
 const tabActive = ref(0)
 const loading = ref(false)
 const uploadLoading = ref(false) // 上拉加载
@@ -105,7 +105,11 @@ function onScrollChange() {
 
     }
 }
-
+const router = useRouter()
+function onNavToEdit() {
+    useAccountEdit().modify = false
+    router.push({ name: 'takenote' })
+}
 const accountStore = useAccount()
 const accountList = toRef(accountStore, 'accountList')
 accountStore.fetchAccount()

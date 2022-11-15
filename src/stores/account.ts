@@ -127,7 +127,7 @@ export const useAccount = defineStore("account", {
       }
     },
 
-    async updateFamilyMember(
+    async addAccountFamilyMember(
       accountId: number,
       account: Pick<
         Account,
@@ -152,43 +152,14 @@ export const useAccount = defineStore("account", {
         AccountFamilyMember,
         accountFamilyMemberList
       );
-
       for (const item of accountFamilyMemberList) {
-        const familyMember = await indexdbUtil.manager.findOne(FamilyMember, {
-          where: {
-            id: item.familymember_id,
-          },
-        });
-        if (familyMember) {
-          if (account.type === 0) {
-            await indexdbUtil.manager.updateOne(
-              FamilyMember,
-              {
-                asset: Decimal.sum(familyMember.asset, item.number).toNumber(),
-              },
-              {
-                where: {
-                  id: item.familymember_id,
-                },
-              }
-            );
-          } else if (account.type === 1) {
-            await indexdbUtil.manager.updateOne(
-              FamilyMember,
-              {
-                debt: Decimal.sum(familyMember.debt, item.number).toNumber(),
-              },
-              {
-                where: {
-                  id: item.familymember_id,
-                },
-              }
-            );
-          }
-        }
+        await this.updateFamilyMember(
+          item.familymember_id,
+          item.type,
+          item.number
+        );
       }
     },
-
     async fetchAccount() {
       if (this.fetchEnd) {
         return;
@@ -273,7 +244,7 @@ export const useAccount = defineStore("account", {
 
       this.updateMonthInfo(account);
       await this.updateAccountType(account);
-      await this.updateFamilyMember(
+      await this.addAccountFamilyMember(
         Number(accountId),
         account,
         familyMemberSelection
@@ -370,6 +341,182 @@ export const useAccount = defineStore("account", {
             },
           ],
         });
+      }
+    },
+
+    async updateFamilyMember(
+      familyMemberId: number,
+      type: number,
+      accountNumber: number,
+      rollback?: boolean // 修改Account时，对应不同成员的账需要回滚。
+    ) {
+      const familyMember = await indexdbUtil.manager.findOne(FamilyMember, {
+        where: {
+          id: familyMemberId,
+        },
+      });
+      if (familyMember) {
+        if (type === 0) {
+          await indexdbUtil.manager.updateOne(
+            FamilyMember,
+            {
+              asset: Decimal[rollback ? "sub" : "sum"](
+                familyMember.asset,
+                accountNumber
+              ).toNumber(),
+            },
+            {
+              where: {
+                id: familyMemberId,
+              },
+            }
+          );
+        } else if (type === 1) {
+          await indexdbUtil.manager.updateOne(
+            FamilyMember,
+            {
+              debt: Decimal[rollback ? "sub" : "sum"](
+                familyMember.debt,
+                accountNumber
+              ).toNumber(),
+            },
+            {
+              where: {
+                id: familyMemberId,
+              },
+            }
+          );
+        }
+      }
+    },
+
+    async updateAccount(
+      oldAccount: Account,
+      account: Account,
+      familyMemberSelection: Pick<FamilyMember, "id" | "name">[]
+    ) {
+      await indexdbUtil.manager.updateOne(Account, account, {
+        where: {
+          id: account.id,
+        },
+      });
+      // 更新对应账目类型内容
+      const accountType = await indexdbUtil.manager.findOne(AccountType, {
+        where: {
+          id: account.account_type_id,
+        },
+      });
+      if (accountType) {
+        if (oldAccount.type === 0) {
+          accountType.number = Decimal.sub(
+            accountType.number,
+            oldAccount.account_number
+          ).toNumber();
+        } else if (oldAccount.type === 1) {
+          accountType.number = Decimal.sum(
+            accountType.number,
+            oldAccount.account_number
+          ).toNumber();
+        }
+
+        if (account.type === 0) {
+          accountType.number = Decimal.sum(
+            accountType.number,
+            account.account_number
+          ).toNumber();
+        } else if (oldAccount.type === 1) {
+          accountType.number = Decimal.sub(
+            accountType.number,
+            account.account_number
+          ).toNumber();
+        }
+
+        await indexdbUtil.manager.updateOne(AccountType, accountType, {
+          where: {
+            id: accountType.id,
+          },
+        });
+        this.accountTypeList = await indexdbUtil.manager.find(AccountType);
+      }
+
+      // 更新accountFamilyMember
+      // 更改成员信息
+      const oldAccountFamilyMemberList = await indexdbUtil.manager.find(
+        AccountFamilyMember,
+        {
+          where: {
+            account_id: account.id,
+          },
+        }
+      );
+      const newFamilyMemberList = familyMemberSelection;
+
+      const arr = divideNumber(
+        account.account_number,
+        familyMemberSelection.length
+      );
+      let sit = 0;
+      for (const item of newFamilyMemberList) {
+        const oldAccountFamilyMemberItem = oldAccountFamilyMemberList.find(
+          (i) => i.familymember_id === item.id
+        );
+        // 更新
+        if (oldAccountFamilyMemberItem) {
+          await this.updateFamilyMember(
+            oldAccountFamilyMemberItem.familymember_id,
+            oldAccountFamilyMemberItem.type,
+            oldAccountFamilyMemberItem.number,
+            true
+          );
+          oldAccountFamilyMemberItem.number = arr[sit];
+          oldAccountFamilyMemberItem.familymember_id = item.id;
+          oldAccountFamilyMemberItem.type = account.type;
+          await this.updateFamilyMember(
+            oldAccountFamilyMemberItem.familymember_id,
+            oldAccountFamilyMemberItem.type,
+            oldAccountFamilyMemberItem.number
+          );
+          await indexdbUtil.manager.updateOne(
+            AccountFamilyMember,
+            oldAccountFamilyMemberItem,
+            {
+              where: {
+                id: oldAccountFamilyMemberItem.id,
+              },
+            }
+          );
+          sit++;
+        } else {
+          // 创建
+          const newAccountFamilyMemberItem: Omit<AccountFamilyMember, "id"> = {
+            account_id: account.id,
+            familymember_id: item.id,
+            type: account.type,
+            number: arr[sit],
+          };
+          await indexdbUtil.manager.insertOne(
+            AccountFamilyMember,
+            newAccountFamilyMemberItem
+          );
+          await this.updateFamilyMember(
+            item.id,
+            newAccountFamilyMemberItem.type,
+            newAccountFamilyMemberItem.number
+          );
+          sit++;
+        }
+      }
+
+      for (const item of oldAccountFamilyMemberList) {
+        // 删除
+        if (!newFamilyMemberList.find((i) => i.id === item.familymember_id)) {
+          await indexdbUtil.manager.deleteOne(AccountFamilyMember, {
+            where: {
+              id: item.id,
+            },
+          });
+          await this.updateFamilyMember(item.id, item.type, item.number, true);
+        }
       }
     },
   },
