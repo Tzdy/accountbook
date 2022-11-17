@@ -34,6 +34,9 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["logo-192x192.png, logo-512x512.png"],
+      // devOptions: {
+      //   enabled: true,
+      // },
       workbox: {
         runtimeCaching: [
           {
