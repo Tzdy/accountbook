@@ -1,41 +1,43 @@
 <template>
-    <van-nav-bar left-arrow safe-area-inset-top title="详情" @click-left="$router.back">
-        <template #right>
-            <van-icon name="delete-o" size="22" />
-        </template>
-    </van-nav-bar>
-    <div class="w-full flex flex-col items-center mt-8">
-        <div class="w-11/12 px-4 pt-4 box-border relative" style="box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;">
-            <div class="flex items-center">
-                <svg-icon color="black" size="2rem" :name="accountDetailType?.icon || ''" />
-                <span class="ml-4">{{ accountDetailType?.name || '' }}</span>
-                <span class="ml-auto mr-0">
-                    <span v-if="account?.type === 1">-</span>
-                    <span>{{ account?.account_number }}</span>
-                </span>
-            </div>
+    <div style="height: 100%;">
+        <van-nav-bar left-arrow safe-area-inset-top title="详情" @click-left="$router.back">
+            <template #right>
+                <van-icon name="delete-o" size="22" />
+            </template>
+        </van-nav-bar>
+        <div class="w-full flex flex-col items-center mt-8">
+            <div class="w-11/12 px-4 pt-4 box-border relative" style="box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;">
+                <div class="flex items-center">
+                    <svg-icon color="black" size="2rem" :name="accountDetailType?.icon || ''" />
+                    <span class="ml-4">{{ accountDetailType?.name || '' }}</span>
+                    <span class="ml-auto mr-0">
+                        <span v-if="account?.type === 1">-</span>
+                        <span>{{ account?.account_number }}</span>
+                    </span>
+                </div>
 
-            <div class="w-full mt-4">
-                <span>{{ account?.description }}</span>
-            </div>
+                <div class="w-full mt-4">
+                    <span>{{ account?.description }}</span>
+                </div>
 
-            <div class="mt-8 flex text-xs">
-                <span v-if="account?.type === 1">付款成员</span>
-                <span v-else-if="account?.type === 0">收款成员</span>
-                <span class="ml-auto mr-0">{{ familyMemberList.map(i => i?.name).join(',') }}</span>
-            </div>
-            <div class="mt-2 flex text-xs">
-                <span>记账时间</span>
-                <span class="ml-auto mr-0">{{ formatDateTime(account?.created_time) }}</span>
-            </div>
-            <div class="mt-2 flex text-xs">
-                <span>资金账户</span>
-                <span class="ml-auto mr-0">{{ accountType?.name }}</span>
-            </div>
+                <div class="mt-8 flex text-xs">
+                    <span v-if="account?.type === 1">付款成员</span>
+                    <span v-else-if="account?.type === 0">收款成员</span>
+                    <span class="ml-auto mr-0">{{ familyMemberList.map(i => i?.name).join(',') }}</span>
+                </div>
+                <div class="mt-2 flex text-xs">
+                    <span>记账时间</span>
+                    <span class="ml-auto mr-0">{{ formatDateTime(account?.created_time) }}</span>
+                </div>
+                <div class="mt-2 flex text-xs">
+                    <span>资金账户</span>
+                    <span class="ml-auto mr-0">{{ accountType?.name }}</span>
+                </div>
 
-            <div class="w-3/5 mx-auto">
-                <van-button @click="onStartEdit" class="translate-y-1/2" round size="large" type="warning">编辑
-                </van-button>
+                <div class="w-3/5 mx-auto">
+                    <van-button @click="onStartEdit" class="translate-y-1/2" round size="large" type="warning">编辑
+                    </van-button>
+                </div>
             </div>
         </div>
     </div>

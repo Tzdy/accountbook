@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import { RouterView } from "vue-router";
+import { RouterView, useRouter } from "vue-router";
 import { useAccount } from "@/stores/account";
+import { Transition, watch, ref } from "vue";
 const accountStore = useAccount()
 accountStore.init()
-
+const route = useRouter()
+watch(route.currentRoute, (val, old) => {
+    transaction.value = 'slide-left'
+    if (val.name === 'index' && old.name === 'takenote') {
+        transaction.value = 'slide-bottom'
+    }
+})
+const transaction = ref('none')
 </script>
     
 <template>
@@ -12,12 +20,51 @@ accountStore.init()
     </div>
     <RouterView v-else v-slot="{ Component }">
         <KeepAlive :include="['IndexView']">
-            <component :is="Component" />
+            <Transition :name="transaction">
+                <component :is="Component" />
+            </Transition>
         </KeepAlive>
     </RouterView>
 </template>
     
 <style>
+.slide-bottom-enter-active,
+.slide-bottom-leave-active {
+    transition: transform 0.2s ease;
+}
+
+.slide-bottom-enter-from,
+.slide-bottom-leave-to {
+    transform: translate3d(0, 100%, 0);
+}
+
+.slide-left-enter-active,
+.slide-left-leave-active {
+    transition: transform 0.2s ease;
+}
+
+.slide-left-enter-from,
+.slide-left-leave-to {
+    transform: translate3d(-100%, 0, 0);
+}
+
+
+.slide-right-enter-active,
+.slide-right-leave-active {
+    transition: transform 0.5s ease;
+}
+
+.slide-right-enter-from,
+.slide-right-leave-to {
+    transform: translate3d(100%, 0, 0);
+}
+
+/* enter-from-class
+enter-active-class
+enter-to-class
+leave-from-class
+leave-active-class
+leave-to-class */
 * {
     padding: 0;
     margin: 0;
