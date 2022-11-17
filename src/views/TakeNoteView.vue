@@ -387,6 +387,9 @@ async function onSubmit() {
         } else {
             await accountStore.addAccount(account, familyMemberSelection.value)
         }
+        $router.replace({
+            name: 'index'
+        })
     } catch (err: any) {
         console.log(familyMemberSelection.value)
         Toast.fail(err.message)

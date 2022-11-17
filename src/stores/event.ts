@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 
 // Initialize deferredPrompt for use later to show browser install prompt.
 let deferredPrompt;
-console.log("???");
 window.addEventListener("beforeinstallprompt", (e) => {
   // Prevent the mini-infobar from appearing on mobile
   e.preventDefault();
@@ -18,6 +17,7 @@ window.addEventListener("beforeinstallprompt", (e) => {
 export const useEvent = defineStore("event", {
   state: () => ({
     deferredPrompt: null as Event | null,
+    indexScrollTop: 0 as number,
   }),
   actions: {
     installApp() {

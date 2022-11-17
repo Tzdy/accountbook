@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { RouterView } from "vue-router";
 import { useAccount } from "@/stores/account";
-import { ref } from "vue";
 const accountStore = useAccount()
 accountStore.init()
 
@@ -12,7 +11,7 @@ accountStore.init()
         loading
     </div>
     <RouterView v-else v-slot="{ Component }">
-        <KeepAlive :include="['HomeView']">
+        <KeepAlive :include="['IndexView']">
             <component :is="Component" />
         </KeepAlive>
     </RouterView>

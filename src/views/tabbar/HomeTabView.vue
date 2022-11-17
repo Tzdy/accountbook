@@ -83,9 +83,10 @@
 <script setup lang="ts">
 import { useAccount } from '@/stores/account';
 import { formatDate } from '@/util/date';
-import { useRouter } from 'vue-router'
-import { ref, toRef } from 'vue'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
+import { ref, toRef, onUpdated } from 'vue'
 import { useAccountEdit } from '@/stores/accountEdit';
+import { useEvent } from '@/stores/event'
 const tabActive = ref(0)
 const loading = ref(false)
 const uploadLoading = ref(false) // 上拉加载
@@ -105,7 +106,19 @@ function onScrollChange() {
 
     }
 }
+let active = true
 const router = useRouter()
+onBeforeRouteLeave(() => {
+    active = false
+    useEvent().indexScrollTop = scrollElement.value?.scrollTop || 0
+})
+onUpdated(() => {
+    if (!active) {
+        console.log('update')
+        scrollElement.value && (scrollElement.value.scrollTop = useEvent().indexScrollTop)
+    }
+    active = true
+})
 function onNavToEdit() {
     useAccountEdit().modify = false
     router.push({ name: 'takenote' })
@@ -113,7 +126,6 @@ function onNavToEdit() {
 const accountStore = useAccount()
 const accountList = toRef(accountStore, 'accountList')
 accountStore.fetchAccount()
-
 </script>
 
 <style scoped>
