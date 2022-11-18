@@ -1,5 +1,5 @@
 <template>
-    <div style="height: 100%; width: 100%">
+    <div class="h-full w-full bg-gray-100">
         <van-nav-bar safe-area-inset-top title="账本记录" />
         <home-tab-view-vue v-show="tabActive === 0" />
         <mine-tab-view-vue v-show="tabActive === 3" />

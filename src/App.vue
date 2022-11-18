@@ -7,8 +7,13 @@ accountStore.init()
 const route = useRouter()
 watch(route.currentRoute, (val, old) => {
     transaction.value = 'slide-left'
-    if (val.name === 'index' && old.name === 'takenote') {
-        transaction.value = 'slide-bottom'
+    if (typeof val.meta.layer === 'number' && typeof old.meta.layer === 'number') {
+
+        if (val.meta.layer > old.meta.layer) {
+            transaction.value = 'slide-left'
+        } else {
+            transaction.value = 'slide-right'
+        }
     }
 })
 const transaction = ref('none')
@@ -28,43 +33,70 @@ const transaction = ref('none')
 </template>
     
 <style>
-.slide-bottom-enter-active,
-.slide-bottom-leave-active {
-    transition: transform 0.2s ease;
-}
-
-.slide-bottom-enter-from,
-.slide-bottom-leave-to {
-    transform: translate3d(0, 100%, 0);
-}
-
 .slide-left-enter-active,
 .slide-left-leave-active {
     transition: transform 0.2s ease;
+    position: absolute;
+    left: 0;
+    top: 0;
 }
 
-.slide-left-enter-from,
-.slide-left-leave-to {
-    transform: translate3d(-100%, 0, 0);
+.slide-left-enter-active {
+    z-index: 9999;
 }
 
-
-.slide-right-enter-active,
-.slide-right-leave-active {
-    transition: transform 0.5s ease;
+.slide-left-leave-active {
+    z-index: -1;
 }
 
-.slide-right-enter-from,
-.slide-right-leave-to {
+.slide-left-enter-from {
     transform: translate3d(100%, 0, 0);
 }
 
-/* enter-from-class
-enter-active-class
-enter-to-class
-leave-from-class
-leave-active-class
-leave-to-class */
+.slide-left-enter-to {
+    transform: translate3d(0, 0, 0);
+}
+
+.slide-left-leave-from {
+    transform: translate3d(0, 0, 0);
+}
+
+.slide-left-leave-to {
+    transform: translate3d(-20%, 0, 0);
+}
+
+.slide-right-enter-active,
+.slide-right-leave-active {
+    transition: transform 0.2s ease;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.slide-right-enter-active {
+    z-index: 9999;
+}
+
+.slide-right-leave-active {
+    z-index: -1;
+}
+
+.slide-right-enter-from {
+    transform: translate3d(-100%, 0, 0);
+}
+
+.slide-right-enter-to {
+    transform: translate3d(0, 0, 0);
+}
+
+.slide-right-leave-from {
+    transform: translate3d(0, 0, 0);
+}
+
+.slide-right-leave-to {
+    transform: translate3d(20%, 0, 0);
+}
+
 * {
     padding: 0;
     margin: 0;
