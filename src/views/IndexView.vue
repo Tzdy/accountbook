@@ -2,6 +2,7 @@
     <div class="h-full w-full bg-gray-100">
         <van-nav-bar safe-area-inset-top title="账本记录" />
         <home-tab-view-vue v-show="tabActive === 0" />
+        <account-tab-view v-show="tabActive === 1" />
         <mine-tab-view-vue v-show="tabActive === 3" />
         <van-tabbar v-model="tabActive">
             <van-tabbar-item icon="home-o">首页</van-tabbar-item>
@@ -15,6 +16,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import HomeTabViewVue from '@/views/tabbar/HomeTabView.vue';
+import AccountTabView from '@/views/tabbar/AccountTabView.vue'
 import MineTabViewVue from './tabbar/MineTabView.vue';
 const tabActive = ref(0)
 
