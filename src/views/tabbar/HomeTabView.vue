@@ -106,19 +106,7 @@ function onScrollChange() {
 
     }
 }
-let active = true
 const router = useRouter()
-onBeforeRouteLeave(() => {
-    active = false
-    useEvent().indexScrollTop = scrollElement.value?.scrollTop || 0
-})
-onUpdated(() => {
-    if (!active) {
-        console.log('update')
-        scrollElement.value && (scrollElement.value.scrollTop = useEvent().indexScrollTop)
-    }
-    active = true
-})
 function onNavToEdit() {
     useAccountEdit().modify = false
     router.push({ name: 'takenote' })

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterView, useRouter } from "vue-router";
 import { useAccount } from "@/stores/account";
-import { Transition, watch, ref } from "vue";
+import { watch, ref } from "vue";
 const accountStore = useAccount()
 accountStore.init()
 const route = useRouter()
@@ -24,11 +24,11 @@ const transaction = ref('none')
         loading
     </div>
     <RouterView v-else v-slot="{ Component }">
-        <KeepAlive :include="['IndexView']">
-            <Transition :name="transaction">
+        <Transition :name="transaction">
+            <KeepAlive include="IndexView">
                 <component :is="Component" />
-            </Transition>
-        </KeepAlive>
+            </KeepAlive>
+        </Transition>
     </RouterView>
 </template>
     
