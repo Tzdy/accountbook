@@ -8,10 +8,13 @@ export class AccountType {
   id!: number;
 
   @Column()
-  name!: string;
+  account_type_sort_id!: number;
 
   @Column()
-  is_allow_debt!: number;
+  account_type_template_id!: number;
+
+  @Column()
+  name!: string;
 
   @Column()
   number!: number;

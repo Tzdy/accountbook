@@ -4,6 +4,8 @@ import { AccountDay } from "./entity/AccountDay";
 import { AccountDetailType } from "./entity/AccountDetailType";
 import { AccountFamilyMember } from "./entity/AccountFamilyMember";
 import { AccountType } from "./entity/AccountType";
+import { AccountTypeSort } from "./entity/AccountTypeSort";
+import { AccountTypeTemplate } from "./entity/AccountTypeTemplate";
 import { FamilyMember } from "./entity/Familymember";
 import { User } from "./entity/User";
 
@@ -15,6 +17,8 @@ export const indexdbUtil = new IndexDBUtil({
     AccountDay,
     AccountDetailType,
     AccountFamilyMember,
+    AccountTypeSort,
+    AccountTypeTemplate,
     AccountType,
     FamilyMember,
     User,
@@ -100,12 +104,98 @@ function initVersionChange(transaction: IDBTransaction, goalVersion: number) {
       name: "其他",
     },
   ];
-  const accountTypeList = [
-    { name: "现金", number: 0, is_allow_debt: false },
-    { name: "储蓄卡", number: 0, is_allow_debt: false },
-    { name: "支付宝", number: 0, is_allow_debt: false },
-    { name: "微信钱包", number: 0, is_allow_debt: false },
-    { name: "现金", number: 0, is_allow_debt: false },
+  const accountTypeSortList: AccountTypeSort[] = [
+    { id: 1, name: "现金", is_allow_debt: false, icon: "cash" },
+    { id: 2, name: "储蓄卡", is_allow_debt: false, icon: "deposit" },
+    { id: 3, name: "在线支付", is_allow_debt: false, icon: "online" },
+    // { id: 4, name: "理财投资", is_allow_debt: false },
+    // { id: 5, name: "储值卡", is_allow_debt: false },
+    { id: 6, name: "社会保障卡", is_allow_debt: false, icon: "social" },
+    { id: 7, name: "其它", is_allow_debt: false, icon: "other" },
+    { id: 8, name: "信用卡", is_allow_debt: true, icon: "credit" },
+    { id: 9, name: "消费贷", is_allow_debt: true, icon: "loan" },
+    { id: 10, name: "欠款", is_allow_debt: true, icon: "owe" },
+  ];
+  const accountTypeTemplateList: AccountTypeTemplate[] = [
+    { id: 1, name: "现金", account_type_sort_id: 1, icon: "cash" },
+    { id: 2, name: "储蓄卡", account_type_sort_id: 2, icon: "deposit" },
+    { id: 3, name: "支付宝", account_type_sort_id: 3, icon: "online" },
+    { id: 4, name: "微信钱包", account_type_sort_id: 3, icon: "online" },
+    { id: 5, name: "公积金", account_type_sort_id: 6, icon: "social" },
+    { id: 6, name: "医保", account_type_sort_id: 6, icon: "social" },
+    { id: 7, name: "其它", account_type_sort_id: 7, icon: "other" },
+    { id: 8, name: "信用卡", account_type_sort_id: 8, icon: "credit" },
+    { id: 9, name: "花呗", account_type_sort_id: 9, icon: "loan" },
+    { id: 10, name: "白条", account_type_sort_id: 9, icon: "loan" },
+    { id: 11, name: "欠款", account_type_sort_id: 10, icon: "owe" },
+  ];
+  const accountTypeList: Omit<AccountType, "id">[] = [
+    {
+      name: "现金",
+      number: 0,
+      account_type_sort_id: 1,
+      account_type_template_id: 1,
+    },
+    {
+      name: "储蓄卡",
+      number: 0,
+      account_type_sort_id: 2,
+      account_type_template_id: 2,
+    },
+    {
+      name: "支付宝",
+      number: 0,
+      account_type_sort_id: 3,
+      account_type_template_id: 3,
+    },
+    {
+      name: "微信钱包",
+      number: 0,
+      account_type_sort_id: 3,
+      account_type_template_id: 4,
+    },
+    {
+      name: "公积金",
+      number: 0,
+      account_type_sort_id: 6,
+      account_type_template_id: 5,
+    },
+    {
+      name: "医保",
+      number: 0,
+      account_type_sort_id: 6,
+      account_type_template_id: 6,
+    },
+    {
+      name: "其它",
+      number: 0,
+      account_type_sort_id: 7,
+      account_type_template_id: 7,
+    },
+    {
+      name: "信用卡",
+      number: 0,
+      account_type_sort_id: 8,
+      account_type_template_id: 8,
+    },
+    {
+      name: "花呗",
+      number: 0,
+      account_type_sort_id: 9,
+      account_type_template_id: 9,
+    },
+    {
+      name: "白条",
+      number: 0,
+      account_type_sort_id: 9,
+      account_type_template_id: 10,
+    },
+    {
+      name: "欠款",
+      number: 0,
+      account_type_sort_id: 10,
+      account_type_template_id: 11,
+    },
   ];
   const familyMemberList = [
     { name: "我", color: "yellow", asset: 0, debt: 0 },
@@ -127,6 +217,12 @@ function initVersionChange(transaction: IDBTransaction, goalVersion: number) {
       type: 0,
       ...item,
     });
+  });
+  accountTypeSortList.forEach((item) => {
+    transaction.objectStore("account_type_sort").add(item);
+  });
+  accountTypeTemplateList.forEach((item) => {
+    transaction.objectStore("account_type_template").add(item);
   });
   accountTypeList.forEach((item) => {
     transaction.objectStore("account_type").add(item);
