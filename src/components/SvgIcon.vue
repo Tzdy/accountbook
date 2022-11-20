@@ -10,7 +10,7 @@ import { computed } from 'vue';
 const props = defineProps({
     prefix: {
         type: String,
-        default: 'icon',
+        default: '',
     },
     name: {
         type: String,
@@ -24,7 +24,7 @@ const props = defineProps({
         default: 24,
     }
 })
-const symbolId = computed(() => `#${props.prefix}-${props.name}`)
+const symbolId = computed(() => props.prefix ? `#icon-${props.prefix}-${props.name}` : `#icon-${props.name}`)
 </script>
 
 <style scoped>

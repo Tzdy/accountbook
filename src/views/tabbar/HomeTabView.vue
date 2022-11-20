@@ -129,14 +129,6 @@ accountStore.fetchAccount()
 </script>
 
 <style scoped>
-.main-container-height {
-    height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - var(--van-tabbar-height));
-}
-
-.min-main-container-height {
-    min-height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - var(--van-tabbar-height));
-}
-
 .parallax-container {
     perspective: 1px;
     perspective-origin: 0 0;

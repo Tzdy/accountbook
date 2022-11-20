@@ -1,5 +1,5 @@
 <template>
-    <div class="h-full w-full bg-gray-100 flex flex-col items-center">
+    <div class="main-container-height w-full bg-gray-100 flex flex-col items-center overflow-auto">
         <div class="w-11/12 box-border p-4 bg-light-50 mt-4">
             <div class="text-xs">
                 <span>净资产（元）</span>
@@ -35,14 +35,80 @@
                 <van-icon class="align-middle ml-2" name="add-o" size="22" />
             </div>
         </div>
+
+        <div class="w-11/12 flex flex-col">
+            <div @click="item.active = !item.active" v-for="item in list" :key="item.id" class="bg-light-50 my-2">
+                <van-cell :title="item.name" is-link :arrow-direction="item.active ? 'down' : 'right'"
+                    :value="item.number" />
+                <div @click.stop="onNavToDetail(child)" class="flex items-center vant-cell"
+                    v-for="child in item.children" :key="child.id" v-show="item.active">
+                    <svg-icon :size="22" prefix="accountTypeSort" :name="child.icon" />
+                    <span class="ml-2">{{ child.name }}</span>
+                    <span class="ml-auto mr-0">{{ child.number }}</span>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { useAccount } from '@/stores/account';
+import { ref, watchEffect } from 'vue'
+import { useRouter } from 'vue-router';
+const router = useRouter()
+interface ListChild {
+    id: number;
+    account_type_sort_id: number;
+    account_type_template_id: number;
+    name: string;
+    number: number;
+    icon: string;
+}
+
+interface List {
+    id: number;
+    name: string;
+    number: number;
+    is_allow_debt: boolean;
+    icon: string;
+    active: boolean;
+    children: ListChild[]
+}
+
 const isAllowWatch = ref(false)
+const accountStore = useAccount()
+
+const list = ref<List[] | null>(null)
+watchEffect(() => {
+    list.value = accountStore.accountTypeSortList.map(sort => {
+        return {
+            ...sort,
+            number: accountStore.accountTypeList.filter(type => type.account_type_sort_id === sort.id).reduce((a, b) => {
+                return a + b.number
+            }, 0),
+            active: list.value ? (list.value.find(i => i.id === sort.id)?.active || false) : false,
+            children: accountStore.accountTypeList.filter(type => type.account_type_sort_id === sort.id).map(child => {
+                const template = accountStore.accountTypeTemplateList.find(item => item.id === child.account_type_template_id)
+                return {
+                    icon: template?.icon || 'none',
+                    ...child
+                }
+            })
+        }
+    }).filter(item => item.children.length !== 0)
+})
+function onNavToDetail(item: ListChild) {
+    router.push({
+        name: 'accountTypeDetail',
+        query: {
+            id: item.id,
+        }
+    })
+}
 </script>
 
 <style scoped>
-
+.vant-cell {
+    padding: var(--van-cell-vertical-padding) var(--van-cell-horizontal-padding);
+}
 </style>

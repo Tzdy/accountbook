@@ -135,5 +135,13 @@ html {
     right: 0;
     margin: auto;
 }
+
+.main-container-height {
+    height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - var(--van-tabbar-height));
+}
+
+.min-main-container-height {
+    min-height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - var(--van-tabbar-height));
+}
 </style>
     

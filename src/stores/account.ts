@@ -10,6 +10,8 @@ import { AccountDay } from "@/entity/AccountDay";
 import { Between } from "indexdb-util";
 import { AccountFamilyMember } from "@/entity/AccountFamilyMember";
 import { divideNumber } from "@/util/number";
+import { AccountTypeSort } from "@/entity/AccountTypeSort";
+import { AccountTypeTemplate } from "@/entity/AccountTypeTemplate";
 
 interface AccountDisplay {
   time: Date;
@@ -39,6 +41,8 @@ export const useAccount = defineStore("account", {
     incomeTypeList: [] as AccountDetailType[],
     spendTypeList: [] as AccountDetailType[],
     accountTypeList: [] as AccountType[],
+    accountTypeSortList: [] as AccountTypeSort[],
+    accountTypeTemplateList: [] as AccountTypeTemplate[],
     familymembetList: [] as FamilyMember[],
   }),
 
@@ -47,8 +51,15 @@ export const useAccount = defineStore("account", {
       const accountDetailTypeList = await indexdbUtil.manager.find(
         AccountDetailType
       );
-      const accountTypeList = await indexdbUtil.manager.find(AccountType);
-      const familyMemberList = await indexdbUtil.manager.find(FamilyMember);
+      this.accountTypeSortList = await indexdbUtil.manager.find(
+        AccountTypeSort
+      );
+      this.accountTypeTemplateList = await indexdbUtil.manager.find(
+        AccountTypeTemplate
+      );
+      this.accountTypeList = await indexdbUtil.manager.find(AccountType);
+      this.familymembetList = await indexdbUtil.manager.find(FamilyMember);
+
       accountDetailTypeList.forEach((item) => {
         if (item.type === 0) {
           this.incomeTypeList.push(item);
@@ -56,8 +67,6 @@ export const useAccount = defineStore("account", {
           this.spendTypeList.push(item);
         }
       });
-      this.accountTypeList = accountTypeList;
-      this.familymembetList = familyMemberList;
 
       const betweenDt = betweenMonth(new Date());
       const monthAccountList = await indexdbUtil.manager.find(Account, {

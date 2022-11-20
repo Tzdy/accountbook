@@ -21,6 +21,12 @@ const router = createRouter({
       component: () => import("@/views/AccountDetail.vue"),
       meta: { layer: 1 },
     },
+    {
+      path: "/accountTypeDetail",
+      name: "accountTypeDetail",
+      component: () => import("@/views/AccountTypeDetail.vue"),
+      meta: { layer: 1 },
+    },
     // {
     //   path: "/login",
     //   name: "login",

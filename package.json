@@ -16,7 +16,7 @@
     "decimal.js": "^10.4.2",
     "indexdb-util": "0.0.0-beta.3",
     "pinia": "^2.0.16",
-    "vant": "^3.5.2",
+    "vant": "^3.6.5",
     "vue": "^3.2.37",
     "vue-router": "^4.1.2"
   },
