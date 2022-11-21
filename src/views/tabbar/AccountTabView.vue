@@ -53,7 +53,8 @@
 
 <script setup lang="ts">
 import { useAccount } from '@/stores/account';
-import { nextTick, ref, watchEffect } from 'vue'
+import Decimal from 'decimal.js';
+import { computed, nextTick, ref, watchEffect } from 'vue'
 import { useRouter } from 'vue-router';
 const router = useRouter()
 interface ListChild {
@@ -79,16 +80,18 @@ const accountStore = useAccount()
 
 const list = ref<List[] | null>(null)
 const totalAsset = ref(0)
-const netAsset = ref(0)
 const totalDebt = ref(0)
+const netAsset = computed(() => {
+    return Decimal.sum(totalAsset.value, totalDebt.value).toNumber()
+})
 watchEffect(() => {
     totalAsset.value = 0
+    totalDebt.value = 0
     list.value = accountStore.accountTypeSortList.map(sort => {
         const number = accountStore.accountTypeList.filter(type => type.account_type_sort_id === sort.id).reduce((a, b) => {
-            return a + b.number
+            b.number > 0 ? (totalAsset.value = Decimal.sum(totalAsset.value, b.number).toNumber()) : (totalDebt.value = Decimal.sum(totalDebt.value, b.number).toNumber())
+            return Decimal.sum(a, b.number).toNumber()
         }, 0)
-        netAsset.value += number
-        number > 0 ? (totalAsset.value += number) : (totalDebt.value += number)
         return {
             ...sort,
             number,

@@ -76,13 +76,13 @@ export const useAccount = defineStore("account", {
       });
       this.monthSpend = monthAccountList.reduce((a, b) => {
         if (b.type === 1) {
-          return a + b.account_number;
+          return Decimal.sum(a, b.account_number).toNumber();
         }
         return a;
       }, 0);
       this.monthIncome = monthAccountList.reduce((a, b) => {
         if (b.type === 0) {
-          return a + b.account_number;
+          return Decimal.sum(a, b.account_number).toNumber();
         }
         return a;
       }, 0);
