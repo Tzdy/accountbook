@@ -6,7 +6,7 @@
             <!-- 支出展示 -->
             <div style="background: url(back.jpeg)" class="flex-col flex rounded-xl px-4 pb-4 relative mx-3">
                 <div class="-mt-1.5rem absolute top-0">
-                    <span class="font-600 text-6xl">{{ accountStore.date.getMonth() + 1 }}</span>
+                    <span class="font-600 text-6xl">{{ topInfo.date.getMonth() + 1 }}</span>
                     <span class="ml-1 text-sm">月支出</span>
                 </div>
                 <div class="flex mt-2">
@@ -17,19 +17,19 @@
                 <div class="mt-2">
                     <span class="text-2xl">
                         <span>¥</span>
-                        <span>{{ accountStore.monthSpend }}</span>
+                        <span>{{ topInfo.spend }}</span>
                     </span>
                 </div>
                 <div class="mt-4 flex items-center text-sm">
                     <span>收入</span>
                     <span class="ml-2">
                         <span>¥</span>
-                        <span>{{ accountStore.monthIncome }}</span>
+                        <span>{{ topInfo.income }}</span>
                     </span>
                     <span class="mr-2 ml-auto">结余</span>
                     <span class="mr-0">
                         <span>¥</span>
-                        <span>{{ accountStore.monthIncome - accountStore.monthSpend }}</span>
+                        <span>{{ topInfo.income - topInfo.spend }}</span>
                     </span>
                 </div>
             </div>
@@ -45,7 +45,7 @@
             <!-- 记账展示 -->
             <div class="w-full h-4 bg-gray-100 sticky top-0 z-60 flex-shrink-0"></div>
             <div class="flex-col flex mx-3">
-                <div class="bg-light-50 rounded-xl" v-for="(item, index) in accountList" :key="index">
+                <div class="bg-light-50 rounded-xl" v-for="(item, index) in list" :key="index">
                     <div
                         class="flex items-center p-4 border-b border-b-solid border-gray-200 sticky top-4 bg-light-50 z-50">
                         <span class="font-600">{{ formatDate(item.time) }}</span>
@@ -82,11 +82,25 @@
 
 <script setup lang="ts">
 import { useAccount } from '@/stores/account';
-import { formatDate } from '@/util/date';
+import { betweenMonth, formatDate } from '@/util/date';
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
-import { ref, toRef, onUpdated } from 'vue'
+import { ref, toRef, onUpdated, computed } from 'vue'
 import { useAccountEdit } from '@/stores/accountEdit';
 import { useEvent } from '@/stores/event'
+
+interface AccountDisplay {
+    time: Date;
+    income: number;
+    spend: number;
+    account: {
+        id: number;
+        type: number;
+        detailTypeName: string;
+        number: number;
+        icon: string;
+    }[];
+}
+
 const tabActive = ref(0)
 const loading = ref(false)
 const uploadLoading = ref(false) // 上拉加载
@@ -112,8 +126,52 @@ function onNavToEdit() {
     router.push({ name: 'takenote' })
 }
 const accountStore = useAccount()
-const accountList = toRef(accountStore, 'accountList')
 accountStore.fetchAccount()
+
+const topInfo = computed(() => {
+    const betweenMn = betweenMonth(new Date())
+    const item = Object.values(accountStore.accountMonthMap).find(month => month.created_time >= betweenMn[0] && month.created_time < betweenMn[1])
+    console.log(accountStore.accountMonthMap)
+    if (item) {
+        return {
+            income: item.income,
+            spend: item.spend,
+            date: new Date()
+        }
+    } else {
+        return {
+            income: 0,
+            spend: 0,
+            date: new Date()
+        }
+    }
+})
+
+const list = computed(() => {
+    const array: AccountDisplay[] = []
+    const set = new Set<number>()
+    accountStore.accountList.forEach(account => {
+        const day = accountStore.accountDayMap[account.account_day_id]
+        const accountDetailType = accountStore.accountDetailTypeList.find(item => item.id === account.detail_type_id)
+        if (!set.has(account.account_day_id)) {
+            array.push({
+                time: account.created_time,
+                income: day.income,
+                spend: day.spend,
+                account: [],
+            })
+            set.add(account.account_day_id)
+        }
+        array[array.length - 1].account.push({
+            id: account.id,
+            type: account.type,
+            detailTypeName: accountDetailType?.name || "无",
+            icon: accountDetailType?.icon || "",
+            number: account.account_number,
+        },)
+    })
+    return array
+})
 </script>
 
 <style scoped>

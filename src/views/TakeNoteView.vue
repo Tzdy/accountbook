@@ -193,6 +193,7 @@
 <script setup lang="ts">
 import type { Account } from '@/entity/Account';
 import type { AccountType } from '@/entity/AccountType';
+import type { FamilyMember } from '@/entity/Familymember';
 import $router from '@/router';
 import { useAccount } from '@/stores/account';
 import { useAccountEdit } from '@/stores/accountEdit';
@@ -217,13 +218,6 @@ function onSelectAccountType(index: number) {
     selectAccountIndex.value = index
     accountType.value = selectAccountActions.value[selectAccountIndex.value]
     isSelectAccountShow.value = false
-}
-
-// 家庭成员选择
-interface FamilyMember {
-    id: number
-    name: string
-    color: string
 }
 
 const isSelectFamilyMemberShow = ref(false)
@@ -316,9 +310,13 @@ const labelComputed = computed(() => {
 
 
 
-const spendTypeList = accountStore.spendTypeList
+const spendTypeList = computed(() => {
+    return accountStore.accountDetailTypeList.filter(item => item.type === 1)
+})
 
-const incomeTypeList = accountStore.incomeTypeList
+const incomeTypeList = computed(() => {
+    return accountStore.accountDetailTypeList.filter(item => item.type === 0)
+})
 
 const takeNoteTypeList = ref<any[]>([])
 watch(indexActive, val => {
@@ -326,10 +324,10 @@ watch(indexActive, val => {
     selection[0] = true
     switch (val) {
         case 0:
-            takeNoteTypeList.value = incomeTypeList
+            takeNoteTypeList.value = incomeTypeList.value
             break
         case 1:
-            takeNoteTypeList.value = spendTypeList
+            takeNoteTypeList.value = spendTypeList.value
             break
         default:
             takeNoteTypeList.value = []
@@ -380,8 +378,6 @@ async function onSubmit() {
                 return;
             }
             await accountStore.updateAccount(oldAccount, {
-                id: oldAccount.id,
-                account_day_id: oldAccount.account_day_id,
                 ...account,
             }, familyMemberSelection.value)
         } else {

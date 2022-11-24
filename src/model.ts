@@ -3,6 +3,7 @@ import { Account } from "./entity/Account";
 import { AccountDay } from "./entity/AccountDay";
 import { AccountDetailType } from "./entity/AccountDetailType";
 import { AccountFamilyMember } from "./entity/AccountFamilyMember";
+import { AccountMonth } from "./entity/AccountMonth";
 import { AccountType } from "./entity/AccountType";
 import { AccountTypeSort } from "./entity/AccountTypeSort";
 import { AccountTypeTemplate } from "./entity/AccountTypeTemplate";
@@ -14,6 +15,7 @@ export const indexdbUtil = new IndexDBUtil({
   version: 1,
   entityList: [
     Account,
+    AccountMonth,
     AccountDay,
     AccountDetailType,
     AccountFamilyMember,

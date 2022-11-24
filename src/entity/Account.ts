@@ -11,6 +11,9 @@ export class Account {
   account_day_id!: number;
 
   @Column()
+  account_month_id!: number;
+
+  @Column()
   account_number!: number;
 
   @Column()

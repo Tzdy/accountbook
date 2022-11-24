@@ -105,6 +105,7 @@ watchEffect(() => {
             })
         }
     }).filter(item => item.children.length !== 0)
+    console.log(list.value)
 })
 
 const scrollElement = ref<HTMLElement | null>()

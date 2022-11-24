@@ -93,7 +93,7 @@ if (route.query.id && typeof route.query.id === 'string') {
             const familyMember = accountStore.familymembetList.find(f => f.id === i.familymember_id)
             return familyMember as FamilyMember
         })
-        accountDetailType.value = accountStore.incomeTypeList.concat(accountStore.spendTypeList).find(i => i.id === data.detail_type_id)
+        accountDetailType.value = accountStore.accountDetailTypeList.find(i => i.id === data.detail_type_id)
         accountType.value = accountStore.accountTypeList.find(i => data.account_type_id === i.id)
     })
 }
