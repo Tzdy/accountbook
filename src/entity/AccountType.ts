@@ -17,5 +17,11 @@ export class AccountType {
   name!: string;
 
   @Column()
+  income!: number;
+
+  @Column()
+  spend!: number;
+
+  @Column()
   number!: number;
 }

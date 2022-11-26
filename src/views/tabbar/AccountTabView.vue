@@ -134,7 +134,7 @@ function onNavToDetail(item: ListChild) {
     router.push({
         name: 'accountTypeDetail',
         query: {
-            id: item.id,
+            accountTypeId: item.id,
         }
     })
 }

@@ -52,6 +52,11 @@ export const useAccount = defineStore("account", {
       accountDetailTypeList.forEach((item) => {
         this.accountDetailTypeList.push(item);
       });
+
+      const accountMonthList = await indexdbUtil.manager.find(AccountMonth);
+      accountMonthList.forEach((item) => {
+        this.accountMonthMap[item.id] = item;
+      });
       this.inited = true;
     },
     async fetchAccount() {
@@ -306,6 +311,13 @@ export const useAccount = defineStore("account", {
       );
       if (accountTypeIndex !== -1) {
         if (account.type === 0) {
+          this.accountTypeList[accountTypeIndex].income = Decimal[
+            rollback ? "sub" : "sum"
+          ](
+            this.accountTypeList[accountTypeIndex].income,
+            account.account_number
+          ).toNumber();
+
           this.accountTypeList[accountTypeIndex].number = Decimal[
             rollback ? "sub" : "sum"
           ](
@@ -313,6 +325,12 @@ export const useAccount = defineStore("account", {
             account.account_number
           ).toNumber();
         } else if (account.type === 1) {
+          this.accountTypeList[accountTypeIndex].spend = Decimal[
+            rollback ? "sub" : "sum"
+          ](
+            this.accountTypeList[accountTypeIndex].spend,
+            account.account_number
+          ).toNumber();
           this.accountTypeList[accountTypeIndex].number = Decimal[
             rollback ? "sum" : "sub"
           ](
