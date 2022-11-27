@@ -144,7 +144,8 @@ async function onChangeActive(activeArray: number[]) {
                     divide[1],
                     false,
                     true
-                )
+                ),
+                account_type_id: accountTypeId,
             },
             order: [{ created_time: "DESC" }],
         })
@@ -164,6 +165,8 @@ interface AccountDisplay {
     }[];
 }
 
+// 目前没有accountType Day关系，意味着每月展开后，会展开当前月的所有账，不会分页。
+// 分页的话，如果那一天的账跨页了，不好计算当天的总支出/收入。如果有分页需求，就增加一个AccountTypeDay表。
 function dayFormat(accountList: Account[]) {
     const map: Record<string, boolean> = {}
     const dayAccountList: AccountDisplay[] = []
@@ -182,11 +185,16 @@ function dayFormat(accountList: Account[]) {
             dayAccountList.push({
                 id: account.account_day_id,
                 children: [child],
-                income: accountStore.accountDayMap[account.account_day_id].income,
-                spend: accountStore.accountDayMap[account.account_day_id].spend,
-                time: accountStore.accountDayMap[account.account_day_id].created_time,
+                income: account.type === 0 ? account.account_number : 0,
+                spend: account.type === 1 ? account.account_number : 0,
+                time: account.created_time,
             })
         } else {
+            if (account.type === 0) {
+                dayAccountList[dayAccountList.length - 1].income = Decimal.sum(dayAccountList[dayAccountList.length - 1].income, account.account_number).toNumber()
+            } else if (account.type === 1) {
+                dayAccountList[dayAccountList.length - 1].spend = Decimal.sum(dayAccountList[dayAccountList.length - 1].spend, account.account_number).toNumber()
+            }
             dayAccountList[dayAccountList.length - 1].children.push(child)
         }
     })

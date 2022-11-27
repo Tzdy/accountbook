@@ -368,6 +368,7 @@ export const useAccount = defineStore("account", {
       let newVal = await indexdbUtil.manager.findOne(AccountTypeMonth, {
         where: {
           created_time: Between(betweenMn[0], betweenMn[1], false, true),
+          account_type_id: account.account_type_id,
         },
       });
       // 如果存在，直接累加
