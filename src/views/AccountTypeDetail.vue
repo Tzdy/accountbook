@@ -128,6 +128,7 @@ async function fetchAccountTypeMonth() {
         where: {
             account_type_id: accountTypeId,
         },
+        order: [{ created_time: "DESC" }],
     });
 }
 fetchAccountTypeMonth()
@@ -144,7 +145,8 @@ async function onChangeActive(activeArray: number[]) {
                     false,
                     true
                 )
-            }
+            },
+            order: [{ created_time: "DESC" }],
         })
     }
 }
