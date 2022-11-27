@@ -384,7 +384,7 @@ async function onSubmit() {
             await accountStore.addAccount(account, familyMemberSelection.value)
         }
         $router.replace({
-            name: 'index'
+            name: 'IndexView'
         })
     } catch (err: any) {
         console.log(familyMemberSelection.value)

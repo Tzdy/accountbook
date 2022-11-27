@@ -70,7 +70,7 @@ function onStartEdit() {
         accountEditStore.familyMemberList = familyMemberList.value
         accountEditStore.modify = true
         router.push({
-            name: 'takenote'
+            name: 'TakeNoteView'
         })
     }
 }

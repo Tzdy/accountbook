@@ -1,13 +1,14 @@
 import { IndexDBUtil } from "indexdb-util";
-import { Account } from "./entity/Account";
-import { AccountDay } from "./entity/AccountDay";
-import { AccountDetailType } from "./entity/AccountDetailType";
-import { AccountFamilyMember } from "./entity/AccountFamilyMember";
-import { AccountMonth } from "./entity/AccountMonth";
-import { AccountType } from "./entity/AccountType";
-import { AccountTypeSort } from "./entity/AccountTypeSort";
-import { AccountTypeTemplate } from "./entity/AccountTypeTemplate";
-import { FamilyMember } from "./entity/Familymember";
+import { Account } from "@/entity/Account";
+import { AccountDay } from "@/entity/AccountDay";
+import { AccountDetailType } from "@/entity/AccountDetailType";
+import { AccountFamilyMember } from "@/entity/AccountFamilyMember";
+import { AccountMonth } from "@/entity/AccountMonth";
+import { AccountType } from "@/entity/AccountType";
+import { AccountTypeMonth } from "@/entity/AccountTypeMonth";
+import { AccountTypeSort } from "@/entity/AccountTypeSort";
+import { AccountTypeTemplate } from "@/entity/AccountTypeTemplate";
+import { FamilyMember } from "@/entity/Familymember";
 import { User } from "./entity/User";
 
 export const indexdbUtil = new IndexDBUtil({
@@ -16,6 +17,7 @@ export const indexdbUtil = new IndexDBUtil({
   entityList: [
     Account,
     AccountMonth,
+    AccountTypeMonth,
     AccountDay,
     AccountDetailType,
     AccountFamilyMember,

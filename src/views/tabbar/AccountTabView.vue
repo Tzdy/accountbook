@@ -105,7 +105,6 @@ watchEffect(() => {
             })
         }
     }).filter(item => item.children.length !== 0)
-    console.log(list.value)
 })
 
 const scrollElement = ref<HTMLElement | null>()
@@ -132,7 +131,7 @@ function onToggle(e: MouseEvent, item: List) {
 
 function onNavToDetail(item: ListChild) {
     router.push({
-        name: 'accountTypeDetail',
+        name: 'AccountTypeDetail',
         query: {
             accountTypeId: item.id,
         }

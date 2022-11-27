@@ -58,7 +58,7 @@
                     </div>
                     <div class="flex-col flex">
                         <router-link v-for="(account, accountIndex) in item.account" :key="accountIndex"
-                            :to="{ name: 'accountDetail', query: { id: account.id } }">
+                            :to="{ name: 'AccountDetail', query: { id: account.id } }">
                             <div class="flex items-center p-4">
                                 <div class="flex-shrink-0 flex-grow-0">
                                     <svg-icon color="black" size="2rem" :name="account.icon" />
@@ -123,7 +123,7 @@ function onScrollChange() {
 const router = useRouter()
 function onNavToEdit() {
     useAccountEdit().modify = false
-    router.push({ name: 'takenote' })
+    router.push({ name: 'TakeNoteView' })
 }
 const accountStore = useAccount()
 accountStore.fetchAccount()

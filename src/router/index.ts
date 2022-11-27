@@ -5,27 +5,27 @@ const router = createRouter({
   routes: [
     {
       path: "/",
-      name: "index",
+      name: "IndexView", // name与组件名一致，方便缓存
       component: () => import("@/views/IndexView.vue"),
-      meta: { layer: 0 },
+      meta: { layer: 0, keepAlive: true },
     },
     {
       path: "/takenote",
-      name: "takenote",
+      name: "TakeNoteView",
       component: () => import("@/views/TakeNoteView.vue"),
-      meta: { layer: 2 },
+      meta: { layer: 3 },
     },
     {
       path: "/accountDetail",
-      name: "accountDetail",
+      name: "AccountDetail",
       component: () => import("@/views/AccountDetail.vue"),
-      meta: { layer: 1 },
+      meta: { layer: 2 },
     },
     {
       path: "/accountTypeDetail",
-      name: "accountTypeDetail",
+      name: "AccountTypeDetail",
       component: () => import("@/views/AccountTypeDetail.vue"),
-      meta: { layer: 1 },
+      meta: { layer: 1, keepAlive: true },
     },
     // {
     //   path: "/login",

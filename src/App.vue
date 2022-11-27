@@ -5,17 +5,22 @@ import { watch, ref } from "vue";
 const accountStore = useAccount()
 accountStore.init()
 const route = useRouter()
+
+const allowKeepAliveArray = useRouter().options.routes.filter(item => item.meta && item.meta.keepAlive)
 watch(route.currentRoute, (val, old) => {
     transaction.value = 'slide-left'
     if (typeof val.meta.layer === 'number' && typeof old.meta.layer === 'number') {
-
         if (val.meta.layer > old.meta.layer) {
             transaction.value = 'slide-left'
         } else {
             transaction.value = 'slide-right'
         }
+        keepAliveArray.value = allowKeepAliveArray.filter(item => item.meta && typeof item.meta.layer === 'number' && typeof val.meta.layer === 'number' && item.meta.layer <= val.meta.layer).map(item => String(item.name) || '')
+
     }
 })
+
+const keepAliveArray = ref<string[]>(allowKeepAliveArray.map(item => String(item.name) || ''))
 const transaction = ref('none')
 </script>
     
@@ -25,7 +30,7 @@ const transaction = ref('none')
     </div>
     <RouterView v-else v-slot="{ Component }">
         <Transition :name="transaction">
-            <KeepAlive include="IndexView">
+            <KeepAlive :include="keepAliveArray">
                 <component :is="Component" />
             </KeepAlive>
         </Transition>
