@@ -416,12 +416,13 @@ if (isModify.value) {
             selectFamilyMemberCheck.value[selectFamilyMembers.value.findIndex(s => s.id === i.id)] = true
         })
         // 成员大于1
+        familyMemberSelection.value = [...selectFamilyMemberCheck.value.map((checked, index) => checked && selectFamilyMembers.value[index]).filter(i => i) as FamilyMember[]]
         if (accountEditStore.familyMemberList.length > 1) {
-            familyMemberSelection.value = [...selectFamilyMemberCheck.value.map((checked, index) => checked && selectFamilyMembers.value[index]).filter(i => i) as FamilyMember[]]
             selectfamilyMemberType.value = 1
         } else {
             selectfamilyMemberType.value = 0
             selectFamilyMemberIndex.value = selectFamilyMembers.value.findIndex(s => s.id === accountEditStore.familyMemberList[0].id)
+
         }
         nextTick(() => {
             onSelectMethod(takeNoteTypeList.value.findIndex(i => i.id === oldAccount?.detail_type_id))
