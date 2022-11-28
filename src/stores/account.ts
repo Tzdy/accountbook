@@ -107,18 +107,23 @@ export const useAccount = defineStore("account", {
       account: Omit<Account, "id" | "account_day_id" | "account_month_id">,
       familyMemberSelection: FamilyMember[]
     ) {
+      await this.upsertAccountDate(AccountDay, betweenDate, oldAccount, true);
       const accountDay = await this.upsertAccountDate(
         AccountDay,
         betweenDate,
-        account,
-        oldAccount
+        account
       );
       this.accountDayMap[accountDay.id] = accountDay;
+      await this.upsertAccountDate(
+        AccountMonth,
+        betweenMonth,
+        oldAccount,
+        true
+      );
       const accountMonth = await this.upsertAccountDate(
         AccountMonth,
         betweenMonth,
-        account,
-        oldAccount
+        account
       );
       this.accountMonthMap[accountMonth.id] = accountMonth;
       if (accountDay && accountMonth) {
@@ -134,7 +139,8 @@ export const useAccount = defineStore("account", {
             id,
           },
         });
-        await this.upsertAccountTypeMonth(newAccount, oldAccount);
+        await this.upsertAccountTypeMonth(oldAccount, true);
+        await this.upsertAccountTypeMonth(newAccount);
         const index = this.accountList.findIndex(
           (item) => item.id === oldAccount.id
         );
@@ -152,6 +158,7 @@ export const useAccount = defineStore("account", {
         });
 
         // familyMember and accountFamilyMember
+        await this.updateAccountFamilyMember(oldAccount, [], true);
         await this.updateAccountFamilyMember(
           {
             id,
@@ -159,8 +166,7 @@ export const useAccount = defineStore("account", {
             account_month_id: accountMonth.id,
             ...account,
           },
-          familyMemberSelection,
-          oldAccount
+          familyMemberSelection
         );
       }
     },
@@ -233,16 +239,60 @@ export const useAccount = defineStore("account", {
         );
       }
     },
+
+    async deleteAccount(accountId: number) {
+      const account = await indexdbUtil.manager.findOne(Account, {
+        where: {
+          id: accountId,
+        },
+      });
+      if (!account) {
+        return;
+      }
+      const oldDay = await this.upsertAccountDate(
+        AccountDay,
+        betweenDate,
+        account,
+        true
+      );
+      this.accountDayMap[oldDay.id] = oldDay;
+      const oldMonth = await this.upsertAccountDate(
+        AccountMonth,
+        betweenMonth,
+        account,
+        true
+      );
+      this.accountMonthMap[oldMonth.id] = oldMonth;
+      await this.upsertAccountTypeMonth(account, true);
+      const index = this.accountList.findIndex(
+        (item) => item.id === account.id
+      );
+      if (index !== -1) {
+        this.accountList.splice(index, 1);
+      }
+
+      // accountType 需要先把旧的回滚了，再更新新的
+      await this.updateAccountType(account, true);
+
+      // familyMember and accountFamilyMember
+      await this.updateAccountFamilyMember(account, [], true);
+
+      await indexdbUtil.manager.deleteOne(Account, {
+        where: {
+          id: account.id,
+        },
+      });
+    },
+
     async upsertAccountDate(
       Entity: abstract new (...args: any) => any,
       betweenFn: (date: Date) => Date[],
       account: Pick<Account, "created_time" | "type" | "account_number">,
-      oldAccount?: Pick<Account, "created_time" | "type" | "account_number">
+      rollback?: boolean
     ) {
-      // 如果有old，表示是更新
-      if (oldAccount) {
+      if (rollback) {
         // 更新旧的
-        const betweenOldMn = betweenFn(oldAccount.created_time);
+        const betweenOldMn = betweenFn(account.created_time);
         const oldMonth = await indexdbUtil.manager.findOne(Entity, {
           where: {
             created_time: Between(
@@ -255,15 +305,15 @@ export const useAccount = defineStore("account", {
         });
         // 这个理论上是一定存在的。
         if (oldMonth) {
-          if (oldAccount.type === 0) {
+          if (account.type === 0) {
             oldMonth.income = Decimal.sub(
               oldMonth.income,
-              oldAccount.account_number
+              account.account_number
             ).toNumber();
-          } else if (oldAccount.type === 1) {
+          } else if (account.type === 1) {
             oldMonth.spend = Decimal.sub(
               oldMonth.spend,
-              oldAccount.account_number
+              account.account_number
             ).toNumber();
           }
           await indexdbUtil.manager.updateOne(Entity, oldMonth, {
@@ -271,65 +321,65 @@ export const useAccount = defineStore("account", {
               id: oldMonth.id,
             },
           });
+          return oldMonth;
         }
-      }
-
-      // 更新新的
-      const betweenMn = betweenFn(account.created_time);
-      let month = await indexdbUtil.manager.findOne(Entity, {
-        where: {
-          created_time: Between(betweenMn[0], betweenMn[1], false, true),
-        },
-      });
-      // 如果存在，直接累加
-      if (month) {
-        if (account.type === 0) {
-          month.income = Decimal.sum(
-            month.income,
-            account.account_number
-          ).toNumber();
-        } else if (account.type === 1) {
-          month.spend = Decimal.sum(
-            month.spend,
-            account.account_number
-          ).toNumber();
-        }
-        await indexdbUtil.manager.updateOne(Entity, month, {
+      } else {
+        // 更新新的
+        const betweenMn = betweenFn(account.created_time);
+        let month = await indexdbUtil.manager.findOne(Entity, {
           where: {
-            id: month.id,
+            created_time: Between(betweenMn[0], betweenMn[1], false, true),
           },
         });
-      } else {
-        // 不存在就直接插入
-        const item = {
-          income: account.type === 0 ? account.account_number : 0,
-          spend: account.type === 1 ? account.account_number : 0,
-          created_time: account.created_time,
-          updated_time: account.created_time,
-        };
-        const monthId = await indexdbUtil.manager.insertOne(Entity, item);
-        month = {
-          id: monthId,
-          ...item,
-        };
+        // 如果存在，直接累加
+        if (month) {
+          if (account.type === 0) {
+            month.income = Decimal.sum(
+              month.income,
+              account.account_number
+            ).toNumber();
+          } else if (account.type === 1) {
+            month.spend = Decimal.sum(
+              month.spend,
+              account.account_number
+            ).toNumber();
+          }
+          await indexdbUtil.manager.updateOne(Entity, month, {
+            where: {
+              id: month.id,
+            },
+          });
+        } else {
+          // 不存在就直接插入
+          const item = {
+            income: account.type === 0 ? account.account_number : 0,
+            spend: account.type === 1 ? account.account_number : 0,
+            created_time: account.created_time,
+            updated_time: account.created_time,
+          };
+          const monthId = await indexdbUtil.manager.insertOne(Entity, item);
+          month = {
+            id: monthId,
+            ...item,
+          };
+        }
+        return month;
       }
-      return month;
     },
 
-    async upsertAccountTypeMonth(account: Account, oldAccount?: Account) {
-      // 如果有old，表示是更新
-      if (oldAccount) {
+    async upsertAccountTypeMonth(account: Account, rollback?: boolean) {
+      if (rollback) {
         // 更新旧的
         const old = await indexdbUtil.manager.findOne(AccountTypeMonth, {
           where: {
-            account_type_id: oldAccount.account_type_id,
+            account_type_id: account.account_type_id,
           },
         });
         let isDelete = false;
         // 这个理论上是一定存在的。
         if (old) {
           // 说明修改账户类型了
-          if (account.account_type_id !== oldAccount.account_type_id) {
+          if (account.account_type_id !== account.account_type_id) {
             // accountTypeMonth上一个账也没有了，就可以删了
             if (old.total_account === 1) {
               await indexdbUtil.manager.deleteOne(AccountTypeMonth, {
@@ -342,15 +392,15 @@ export const useAccount = defineStore("account", {
           }
           // 没有删除的情况下才需要回滚数据
           if (!isDelete) {
-            if (oldAccount.type === 0) {
+            if (account.type === 0) {
               old.income = Decimal.sub(
                 old.income,
-                oldAccount.account_number
+                account.account_number
               ).toNumber();
-            } else if (oldAccount.type === 1) {
+            } else if (account.type === 1) {
               old.spend = Decimal.sub(
                 old.spend,
-                oldAccount.account_number
+                account.account_number
               ).toNumber();
             }
             old.total_account--;
@@ -361,52 +411,55 @@ export const useAccount = defineStore("account", {
             });
           }
         }
-      }
-
-      // 更新新的
-      const betweenMn = betweenMonth(account.created_time);
-      let newVal = await indexdbUtil.manager.findOne(AccountTypeMonth, {
-        where: {
-          created_time: Between(betweenMn[0], betweenMn[1], false, true),
-          account_type_id: account.account_type_id,
-        },
-      });
-      // 如果存在，直接累加
-      if (newVal) {
-        if (account.type === 0) {
-          newVal.income = Decimal.sum(
-            newVal.income,
-            account.account_number
-          ).toNumber();
-        } else if (account.type === 1) {
-          newVal.spend = Decimal.sum(
-            newVal.spend,
-            account.account_number
-          ).toNumber();
-        }
-        newVal.total_account++;
-        await indexdbUtil.manager.updateOne(AccountTypeMonth, newVal, {
+      } else {
+        // 更新新的
+        const betweenMn = betweenMonth(account.created_time);
+        let newVal = await indexdbUtil.manager.findOne(AccountTypeMonth, {
           where: {
-            id: newVal.id,
+            created_time: Between(betweenMn[0], betweenMn[1], false, true),
+            account_type_id: account.account_type_id,
           },
         });
-      } else {
-        // 不存在就直接插入
-        const item: Omit<AccountTypeMonth, "id"> = {
-          account_type_id: account.account_type_id,
-          total_account: 1,
-          income: account.type === 0 ? account.account_number : 0,
-          spend: account.type === 1 ? account.account_number : 0,
-          created_time: account.created_time,
-          updated_time: account.created_time,
-        };
-        const id = await indexdbUtil.manager.insertOne(AccountTypeMonth, item);
-        newVal = {
-          id: Number(id),
-          ...item,
-        };
+        // 如果存在，直接累加
+        if (newVal) {
+          if (account.type === 0) {
+            newVal.income = Decimal.sum(
+              newVal.income,
+              account.account_number
+            ).toNumber();
+          } else if (account.type === 1) {
+            newVal.spend = Decimal.sum(
+              newVal.spend,
+              account.account_number
+            ).toNumber();
+          }
+          newVal.total_account++;
+          await indexdbUtil.manager.updateOne(AccountTypeMonth, newVal, {
+            where: {
+              id: newVal.id,
+            },
+          });
+        } else {
+          // 不存在就直接插入
+          const item: Omit<AccountTypeMonth, "id"> = {
+            account_type_id: account.account_type_id,
+            total_account: 1,
+            income: account.type === 0 ? account.account_number : 0,
+            spend: account.type === 1 ? account.account_number : 0,
+            created_time: account.created_time,
+            updated_time: account.created_time,
+          };
+          const id = await indexdbUtil.manager.insertOne(
+            AccountTypeMonth,
+            item
+          );
+          newVal = {
+            id: Number(id),
+            ...item,
+          };
+        }
+        return newVal;
       }
-      return newVal;
     },
 
     async updateAccountType(account: Account, rollback?: boolean) {
@@ -458,26 +511,68 @@ export const useAccount = defineStore("account", {
     async updateAccountFamilyMember(
       account: Account,
       familyMemberSelection: FamilyMember[],
-      oldAccount?: Account
+      rollback?: boolean
     ) {
-      // 回滚
-      if (oldAccount) {
+      if (!rollback) {
+        const divide = divideNumber(
+          account.account_number,
+          familyMemberSelection.length
+        );
+        for (let i = 0; i < familyMemberSelection.length; i++) {
+          const familyMember = await indexdbUtil.manager.findOne(FamilyMember, {
+            where: {
+              id: familyMemberSelection[i].id,
+            },
+          });
+          if (!familyMember) {
+            continue;
+          }
+          await indexdbUtil.manager.insertOne(AccountFamilyMember, {
+            account_id: account.id,
+            familymember_id: familyMember.id,
+            number: divide[i],
+            type: account.type,
+          });
+          if (account.type === 0) {
+            familyMember.asset = Decimal.sum(
+              familyMember.asset,
+              divide[i]
+            ).toNumber();
+          } else if (account.type === 1) {
+            familyMember.debt = Decimal.sum(
+              familyMember.debt,
+              divide[i]
+            ).toNumber();
+          }
+          await indexdbUtil.manager.updateOne(FamilyMember, familyMember, {
+            where: {
+              id: familyMember.id,
+            },
+          });
+          const index = this.familymembetList.findIndex(
+            (item) => item.id === familyMember.id
+          );
+          if (index !== -1) {
+            this.familymembetList[index] = familyMember;
+          }
+        }
+      } else if (rollback) {
         const oldAccountFamilyMemberList = await indexdbUtil.manager.find(
           AccountFamilyMember,
           {
             where: {
-              account_id: oldAccount.id,
+              account_id: account.id,
             },
           }
         );
         // 回滚删除
         await indexdbUtil.manager.delete(AccountFamilyMember, {
           where: {
-            account_id: oldAccount.id,
+            account_id: account.id,
           },
         });
         const oldDivide = divideNumber(
-          oldAccount.account_number,
+          account.account_number,
           oldAccountFamilyMemberList.length
         );
         for (let i = 0; i < oldAccountFamilyMemberList.length; i++) {
@@ -491,12 +586,12 @@ export const useAccount = defineStore("account", {
             }
           );
           if (oldFamilyMember) {
-            if (oldAccount.type === 0) {
+            if (account.type === 0) {
               oldFamilyMember.asset = Decimal.sub(
                 oldFamilyMember.asset,
                 oldDivide[i]
               ).toNumber();
-            } else if (oldAccount.type === 1) {
+            } else if (account.type === 1) {
               oldFamilyMember.debt = Decimal.sub(
                 oldFamilyMember.debt,
                 oldDivide[i]
@@ -516,49 +611,6 @@ export const useAccount = defineStore("account", {
               this.familymembetList[index] = oldFamilyMember;
             }
           }
-        }
-      }
-
-      const divide = divideNumber(
-        account.account_number,
-        familyMemberSelection.length
-      );
-      for (let i = 0; i < familyMemberSelection.length; i++) {
-        const familyMember = await indexdbUtil.manager.findOne(FamilyMember, {
-          where: {
-            id: familyMemberSelection[i].id,
-          },
-        });
-        if (!familyMember) {
-          continue;
-        }
-        await indexdbUtil.manager.insertOne(AccountFamilyMember, {
-          account_id: account.id,
-          familymember_id: familyMember.id,
-          number: divide[i],
-          type: account.type,
-        });
-        if (account.type === 0) {
-          familyMember.asset = Decimal.sum(
-            familyMember.asset,
-            divide[i]
-          ).toNumber();
-        } else if (account.type === 1) {
-          familyMember.debt = Decimal.sum(
-            familyMember.debt,
-            divide[i]
-          ).toNumber();
-        }
-        await indexdbUtil.manager.updateOne(FamilyMember, familyMember, {
-          where: {
-            id: familyMember.id,
-          },
-        });
-        const index = this.familymembetList.findIndex(
-          (item) => item.id === familyMember.id
-        );
-        if (index !== -1) {
-          this.familymembetList[index] = familyMember;
         }
       }
     },

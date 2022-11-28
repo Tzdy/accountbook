@@ -2,7 +2,7 @@
     <div class="h-full w-full bg-gray-100">
         <van-nav-bar left-arrow safe-area-inset-top title="详情" @click-left="$router.back">
             <template #right>
-                <van-icon name="delete-o" size="22" />
+                <van-icon @click="onDelete" name="delete-o" size="22" />
             </template>
         </van-nav-bar>
         <div class="w-full flex flex-col items-center mt-8">
@@ -96,6 +96,16 @@ if (route.query.id && typeof route.query.id === 'string') {
         accountDetailType.value = accountStore.accountDetailTypeList.find(i => i.id === data.detail_type_id)
         accountType.value = accountStore.accountTypeList.find(i => data.account_type_id === i.id)
     })
+}
+
+function onDelete() {
+    if (route.query.id && typeof route.query.id === 'string') {
+        accountStore.deleteAccount(Number(route.query.id)).then(() => {
+            router.replace({
+                name: 'IndexView',
+            })
+        })
+    }
 }
 </script>
 
