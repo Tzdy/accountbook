@@ -22,16 +22,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRef, watch } from 'vue'
+import { computed, ref, toRef } from 'vue'
 
 const prop = defineProps({
     show: {
         type: Boolean,
         default: false
+    },
+    date: {
+        type: Date,
+        default: () => new Date(),
     }
 })
 
-const emit = defineEmits(['update:show', 'select'])
+const emit = defineEmits(['update:show', 'select', 'update:date'])
 
 const calendarShow = toRef(prop, 'show')
 

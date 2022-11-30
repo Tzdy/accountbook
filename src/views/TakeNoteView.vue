@@ -186,7 +186,7 @@
             </div>
         </van-action-sheet>
         <!-- 日期选择 -->
-        <Calendar v-model:show="calendarShow" @select="onSelectDate" />
+        <Calendar v-model:show="calendarShow" v-model:date="date" @select="onSelectDate" />
     </div>
 </template>
 

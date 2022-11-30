@@ -370,25 +370,24 @@ export const useAccount = defineStore("account", {
     async upsertAccountTypeMonth(account: Account, rollback?: boolean) {
       if (rollback) {
         // 更新旧的
+        const betweenMn = betweenMonth(account.created_time);
         const old = await indexdbUtil.manager.findOne(AccountTypeMonth, {
           where: {
             account_type_id: account.account_type_id,
+            created_time: Between(betweenMn[0], betweenMn[1], false, true),
           },
         });
         let isDelete = false;
         // 这个理论上是一定存在的。
         if (old) {
-          // 说明修改账户类型了
-          if (account.account_type_id !== account.account_type_id) {
-            // accountTypeMonth上一个账也没有了，就可以删了
-            if (old.total_account === 1) {
-              await indexdbUtil.manager.deleteOne(AccountTypeMonth, {
-                where: {
-                  id: old.id,
-                },
-              });
-              isDelete = true;
-            }
+          // accountTypeMonth上一个账也没有了，就可以删了
+          if (old.total_account === 1) {
+            await indexdbUtil.manager.deleteOne(AccountTypeMonth, {
+              where: {
+                id: old.id,
+              },
+            });
+            isDelete = true;
           }
           // 没有删除的情况下才需要回滚数据
           if (!isDelete) {
@@ -597,7 +596,6 @@ export const useAccount = defineStore("account", {
                 oldDivide[i]
               ).toNumber();
             }
-            console.log(oldFamilyMember);
             await indexdbUtil.manager.updateOne(FamilyMember, oldFamilyMember, {
               where: {
                 id: oldFamilyMember.id,
