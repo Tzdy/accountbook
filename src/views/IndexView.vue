@@ -3,6 +3,7 @@
         <van-nav-bar safe-area-inset-top title="账本记录" />
         <home-tab-view-vue ref="home" v-show="tabActive === 0" />
         <account-tab-view ref="account" v-show="tabActive === 1" />
+        <chart-tab-view v-if="(tabActive === 2)" />
         <mine-tab-view-vue ref="mine" v-show="tabActive === 3" />
         <van-tabbar v-model="tabActive">
             <van-tabbar-item icon="home-o">首页</van-tabbar-item>
@@ -16,6 +17,7 @@
 import { onUpdated, ref, type ComponentPublicInstance } from 'vue'
 import HomeTabViewVue from '@/views/tabbar/HomeTabView.vue';
 import AccountTabView from '@/views/tabbar/AccountTabView.vue'
+import ChartTabView from './tabbar/ChartTabView.vue';
 import MineTabViewVue from './tabbar/MineTabView.vue';
 import { useEvent } from '@/stores/event';
 import { onBeforeRouteLeave } from 'vue-router';

@@ -8,6 +8,8 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     Calendar: typeof import('./src/components/Calendar.vue')['default']
+    Echarts: typeof import('./src/components/Echarts.vue')['default']
+    EchartTemplate1: typeof import('./src/components/EchartTemplate1.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SvgIcon: typeof import('./src/components/SvgIcon.vue')['default']

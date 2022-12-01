@@ -14,6 +14,7 @@
   "dependencies": {
     "axios": "^0.27.2",
     "decimal.js": "^10.4.2",
+    "echarts": "^5.4.0",
     "indexdb-util": "0.0.0-beta.3",
     "pinia": "^2.0.16",
     "vant": "^3.6.5",
