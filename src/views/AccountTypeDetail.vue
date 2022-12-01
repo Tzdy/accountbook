@@ -26,7 +26,7 @@
 
             <div class="w-full mt-3">
                 <van-collapse @change="onChangeActive" v-model="active">
-                    <van-collapse-item v-for="item, index in monthList" :key="item.id" :name="index">
+                    <van-collapse-item v-for="item in monthList" :key="item.id" :name="item.id">
                         <template #title>
                             <div class="whitespace-nowrap">
                                 <div class="inline-block">
@@ -134,22 +134,23 @@ async function fetchAccountTypeMonth() {
 fetchAccountTypeMonth()
 
 async function onChangeActive(activeArray: number[]) {
-    const index = activeArray.find(item => !monthAccountMap[item])
-    if (index !== undefined) {
-        const divide = betweenMonth(monthList.value[index].created_time)
-        monthAccountMap[monthList.value[index].id] = await indexdbUtil.manager.find(Account, {
-            where: {
-                created_time: Between(
-                    divide[0],
-                    divide[1],
-                    false,
-                    true
-                ),
-                account_type_id: accountTypeId,
-            },
-            order: [{ created_time: "DESC" }],
-        })
-    }
+    activeArray.forEach(async (id, index) => {
+        if (!monthAccountMap[id]) {
+            const divide = betweenMonth(monthList.value[index].created_time)
+            monthAccountMap[id] = await indexdbUtil.manager.find(Account, {
+                where: {
+                    created_time: Between(
+                        divide[0],
+                        divide[1],
+                        false,
+                        true
+                    ),
+                    account_type_id: accountTypeId,
+                },
+                order: [{ created_time: "DESC" }],
+            })
+        }
+    })
 }
 interface AccountDisplay {
     id: number;
@@ -200,52 +201,6 @@ function dayFormat(accountList: Account[]) {
     })
     return dayAccountList
 }
-
-
-// key: accountMonthId, value: Account
-// const accountMap = computed(() => {
-//     const map: Record<string, Account[]> = {}
-//     accountTypeDetailStore.accountList.forEach(account => {
-//         if (!map[account.account_month_id]) {
-//             map[account.account_month_id] = [account]
-//         } else {
-//             map[account.account_month_id].push(account)
-//         }
-//     })
-//     return map
-// })
-
-
-
-
-// function monthAccountList(accountList: Account[]) {
-//     const map: Record<string, boolean> = {}
-//     const dayAccountList: AccountDisplay[] = []
-//     accountList.forEach(account => {
-//         const accountDetail = accountStore.accountDetailTypeList.find(item => item.id === account.detail_type_id)
-//         const child: AccountDisplay['children'][0] = {
-//             detailTypeName: accountDetail?.name || '',
-//             icon: accountDetail?.icon || '',
-//             number: account.account_number,
-//             id: account.id,
-//             type: account.type,
-//         }
-
-//         if (!map[account.account_day_id]) {
-//             map[account.account_day_id] = true
-//             dayAccountList.push({
-//                 id: account.account_day_id,
-//                 children: [child],
-//                 income: accountStore.accountDayMap[account.account_day_id].income,
-//                 spend: accountStore.accountDayMap[account.account_day_id].spend,
-//                 time: accountStore.accountDayMap[account.account_day_id].created_time,
-//             })
-//         } else {
-//             dayAccountList[dayAccountList.length - 1].children.push(child)
-//         }
-//     })
-//     return dayAccountList
-// }
 </script>
 
 <style scoped>
