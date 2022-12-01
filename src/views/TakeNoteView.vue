@@ -186,7 +186,7 @@
             </div>
         </van-action-sheet>
         <!-- 日期选择 -->
-        <Calendar v-model:show="calendarShow" v-model:date="date" @select="onSelectDate" />
+        <Calendar v-model:show="calendarShow" v-model:date="date" />
     </div>
 </template>
 
@@ -287,10 +287,7 @@ const date = ref(new Date())
 const dateComputed = computed(() => {
     return `${(date.value.getMonth() + 1 + '').padStart(2, '0')}-${(date.value.getDate() + '').padStart(2, '0')}`
 })
-function onSelectDate(d: Date) {
-    console.log(d)
-    date.value = d
-}
+
 const calendarShow = ref(false)
 
 // 账单详情

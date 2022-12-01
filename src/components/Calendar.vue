@@ -44,9 +44,9 @@ function onToggleShow() {
     emit('update:show', !calendarShow.value)
 }
 
-const nowDate = new Date()
-const year = ref(nowDate.getFullYear())
-const month = ref(nowDate.getMonth() + 1)
+const nowDate = toRef(prop, 'date')
+const year = ref(nowDate.value.getFullYear())
+const month = ref(nowDate.value.getMonth() + 1)
 
 const title = computed(() => {
     return `${year.value}年${(month.value + '').padStart(2, '0')}月`
@@ -89,16 +89,16 @@ const dayList = computed(() => {
 function onSelectDate(day: number) {
     // 0 是占位符
     if (day !== 0) {
-        goalDate.value = new Date(`${year.value}/${month.value}/${day}`)
-        emit('select', goalDate.value)
+        emit('update:date', new Date(`${year.value}/${month.value}/${day}`))
+        emit('select', nowDate.value)
     }
 }
 
 function dayCellActive(day: number) {
     if (day !== 0) {
-        if (goalDate.value.getFullYear() === year.value) {
-            if (goalDate.value.getMonth() + 1 === month.value) {
-                if (day === goalDate.value.getDate()) {
+        if (nowDate.value.getFullYear() === year.value) {
+            if (nowDate.value.getMonth() + 1 === month.value) {
+                if (day === nowDate.value.getDate()) {
                     return true
                 }
             }
@@ -107,7 +107,6 @@ function dayCellActive(day: number) {
     return false
 }
 
-const goalDate = ref(nowDate)
 
 
 
