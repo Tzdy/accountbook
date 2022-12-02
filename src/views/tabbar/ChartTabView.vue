@@ -1,7 +1,7 @@
 <template>
     <div class="main-container-height w-full">
         <div class="flex flex-col items-center w-full">
-            <div class="w-11/12 flex text-xs bg-light-50 mt-1">
+            <div class="w-11/12 flex text-xs bg-light-50 mt-4">
                 <div @click="onChangeActive(0)"
                     :class="(active === 0 ? 'bg-gradient-to-b from-green-50 to-light-50 text-green-500' : '')"
                     class="flex flex-col overflow-hidden basis-1/3 truncate items-center py-2 transition-all duration-500">
@@ -26,13 +26,15 @@
                     <van-icon name="arrow-down" />
                 </div>
             </div>
-        </div>
-        <div class="w-full relative" style="padding-bottom: 100%;">
-            <EchartTemplate1Vue v-show="!loading" class="absolute" :data="data" />
-            <div v-show="loading" class="flex items-center justify-center h-full w-full absolute">
-                <van-loading color="#0094ff" />
+
+            <div class="w-full relative" style="padding-bottom: 50%;">
+                <EchartTemplate1Vue v-show="!loading" class="absolute" :data="data" />
+                <div v-show="loading" class="flex items-center justify-center h-full w-full absolute">
+                    <van-loading color="#0094ff" />
+                </div>
             </div>
         </div>
+
     </div>
 </template>
 
@@ -92,7 +94,7 @@ async function fetchChartData(number: number) {
         array.forEach(account => {
             map[account.type].value = Decimal.sum(map[account.type].value, account.account_number).toNumber()
         })
-        data.value = Object.values(map)
+        data.value = Object.values(map).filter(item => item.value)
     } else {
         array = await indexdbUtil.manager.find(Account, {
             where: {

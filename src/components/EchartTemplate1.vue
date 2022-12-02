@@ -19,7 +19,8 @@ const options = computed(() => {
             {
                 name: 'Access From',
                 type: 'pie',
-                radius: ['25%', '35%'],
+                center: ['50%', '50%'],
+                radius: ['50%', '60%'],
                 avoidLabelOverlap: false,
                 data: props.data
             }
