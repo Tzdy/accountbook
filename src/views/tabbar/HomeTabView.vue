@@ -29,7 +29,7 @@
                     <span class="mr-2 ml-auto">结余</span>
                     <span class="mr-0">
                         <span>¥</span>
-                        <span>{{ topInfo.income - topInfo.spend }}</span>
+                        <span>{{ topInfo.balance }}</span>
                     </span>
                 </div>
             </div>
@@ -87,6 +87,7 @@ import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { ref, toRef, onUpdated, computed } from 'vue'
 import { useAccountEdit } from '@/stores/accountEdit';
 import { useEvent } from '@/stores/event'
+import Decimal from 'decimal.js';
 
 interface AccountDisplay {
     time: Date;
@@ -136,12 +137,14 @@ const topInfo = computed(() => {
         return {
             income: item.income,
             spend: item.spend,
+            balance: Decimal.sub(item.income, item.spend).toNumber(),
             date: new Date()
         }
     } else {
         return {
             income: 0,
             spend: 0,
+            balance: 0,
             date: new Date()
         }
     }
