@@ -198,6 +198,7 @@ import $router from '@/router';
 import { useAccount } from '@/stores/account';
 import { useAccountEdit } from '@/stores/accountEdit';
 import { divideNumber } from '@/util/number';
+import Decimal from 'decimal.js';
 import { Toast } from 'vant';
 import { ref, watch, reactive, computed, toRef, nextTick } from 'vue'
 
@@ -367,6 +368,17 @@ async function onSubmit() {
             description: description.value,
             detail_type_id: takeNoteTypeList.value[selection.findIndex(item => item)].id,
             type: indexActive.value
+        }
+        if (account.account_number === 0) {
+            throw new Error('不能为0')
+        }
+        // 判断账户是否允许欠账
+        const accountTypeSort = accountStore.accountTypeSortList.find(item => item.id === accountType.value.account_type_sort_id)
+        if (accountTypeSort && !accountTypeSort.is_allow_debt) {
+            const balance = Decimal.sub(accountType.value.income, accountType.value.spend).toNumber()
+            if (indexActive.value === 1 && Decimal.sub(balance, account.account_number).toNumber() < 0) {
+                throw new Error('该账户余额不足')
+            }
         }
         // 如果不能平分这个函数会报错
         divideNumber(account.account_number, familyMemberSelection.value.length)

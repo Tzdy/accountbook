@@ -6,7 +6,8 @@
             </template>
         </van-nav-bar>
         <div class="w-full flex flex-col items-center mt-8">
-            <div class="w-11/12 px-4 pt-4 box-border relative" style="box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;">
+            <div class="w-11/12 px-4 pt-4 box-border relative bg-light-50"
+                style="box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;">
                 <div class="flex items-center">
                     <svg-icon color="black" size="2rem" :name="accountDetailType?.icon || ''" />
                     <span class="ml-4">{{ accountDetailType?.name || '' }}</span>
