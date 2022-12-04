@@ -9,6 +9,21 @@ import "uno.css";
 import "vant/es/toast/style";
 import { indexdbUtil } from "./model";
 import { createPinia } from "pinia";
+
+// PWA启动时，window.innerWidth和window.innerHeight是0 ？？？
+window.addEventListener("resize", () => {
+  const html = document.querySelector("html");
+  if (window.innerWidth / window.innerHeight >= 0.6) {
+    html && (html.style.fontSize = window.innerWidth / (375 / 16) + "px");
+  } else if (window.innerWidth / window.innerHeight >= 0.55) {
+    html && (html.style.fontSize = window.innerWidth / (375 / 17) + "px");
+  } else if (window.innerWidth / window.innerHeight >= 0.5) {
+    html && (html.style.fontSize = window.innerWidth / (375 / 18) + "px");
+  } else {
+    html && (html.style.fontSize = window.innerWidth / (375 / 19) + "px");
+  }
+});
+
 indexdbUtil.connect().then(() => {
   const app = createApp(App);
   app.use(createPinia());
