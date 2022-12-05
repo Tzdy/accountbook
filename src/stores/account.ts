@@ -151,9 +151,6 @@ export const useAccount = defineStore("account", {
         // accountType 需要先把旧的回滚了，再更新新的
         await this.updateAccountType(oldAccount, true);
         await this.updateAccountType({
-          id,
-          account_day_id: accountDay.id,
-          account_month_id: accountMonth.id,
           ...account,
         });
 
@@ -194,7 +191,6 @@ export const useAccount = defineStore("account", {
         };
         const id = await indexdbUtil.manager.insertOne(Account, accountItem);
         await this.upsertAccountTypeMonth({
-          id: Number(id),
           ...accountItem,
         });
         // accountList中account是从当前到过去的顺序， 由大到小
@@ -221,9 +217,6 @@ export const useAccount = defineStore("account", {
 
         // accountType
         await this.updateAccountType({
-          id: Number(id),
-          account_day_id: accountDay.id,
-          account_month_id: accountMonth.id,
           ...account,
         });
 
@@ -367,7 +360,13 @@ export const useAccount = defineStore("account", {
       }
     },
 
-    async upsertAccountTypeMonth(account: Account, rollback?: boolean) {
+    async upsertAccountTypeMonth(
+      account: Pick<
+        Account,
+        "created_time" | "account_type_id" | "type" | "account_number"
+      >,
+      rollback?: boolean
+    ) {
       if (rollback) {
         // 更新旧的
         const betweenMn = betweenMonth(account.created_time);
@@ -461,7 +460,10 @@ export const useAccount = defineStore("account", {
       }
     },
 
-    async updateAccountType(account: Account, rollback?: boolean) {
+    async updateAccountType(
+      account: Pick<Account, "account_type_id" | "type" | "account_number">,
+      rollback?: boolean
+    ) {
       const accountTypeIndex = this.accountTypeList.findIndex(
         (item) => item.id === account.account_type_id
       );

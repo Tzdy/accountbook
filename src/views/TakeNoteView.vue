@@ -43,17 +43,26 @@
                             <span class="text-gray-400 w-1/2 text-right inline-block">转入</span>
                         </div>
                         <div class="w-full gap-x-2 mt-1 flex items-center">
-                            <div class="flex gap-x-2 w-full items-center overflow-auto">
-                                <svg-icon class="flex-shrink-0" name="transaction" size="2rem" />
+                            <div @click="onOpenSelectFromAccountType"
+                                class="flex gap-x-2 w-full items-center overflow-auto">
+                                <svg-icon v-if="!fromAccountType" class="flex-shrink-0" name="transaction"
+                                    size="2rem" />
+                                <svg-icon v-else class="flex-shrink-0" prefix="accountTypeSort"
+                                    :name="fromAccountType.icon" size="2rem" />
                                 <div class="text-gray-400 w-full border-b border-b-solid border-gray-200 py-2 truncate">
-                                    请选择账户
+                                    <span v-if="!fromAccountType">请选择账户</span>
+                                    <span v-else>{{ fromAccountType.name }}</span>
                                 </div>
                             </div>
                             <svg-icon class="flex-shrink-0" name="contact" size="2.2rem" />
-                            <div class="flex gap-x-2 w-full items-center overflow-auto">
-                                <svg-icon class="flex-shrink-0" name="transaction" size="2rem" />
+                            <div @click="onOpenSelectToAccountType"
+                                class="flex gap-x-2 w-full items-center overflow-auto">
+                                <svg-icon v-if="!toAccountType" class="flex-shrink-0" name="transaction" size="2rem" />
+                                <svg-icon v-else class="flex-shrink-0" prefix="accountTypeSort"
+                                    :name="toAccountType.icon" size="2rem" />
                                 <div class="text-gray-400 w-full border-b border-b-solid border-gray-200 py-2 truncate">
-                                    请选择账户
+                                    <span v-if="!toAccountType">请选择账户</span>
+                                    <span v-else>{{ toAccountType.name }}</span>
                                 </div>
                             </div>
                         </div>
@@ -90,7 +99,7 @@
                         </van-button>
                     </div>
                     <div v-if="indexActive !== 2" class="flex bg-light-50 py-2">
-                        <div @click="isSelectAccountShow = true"
+                        <div @click="onOpenSelectAccountType"
                             class="basis-full flex items-center gap-x-2 justify-center overflow-hidden">
                             <van-icon name="credit-pay" />
                             <span class="ellipsis">{{ accountType.name }}</span>
@@ -138,7 +147,7 @@
                     <van-icon size="20" name="cash-back-record" />
                     <span class="ml-3 text-sm">{{ item.name }}</span>
                     <span class="ml-4 text-sm">{{ item.number }}</span>
-                    <van-icon class="mr-4 ml-auto text-yellow-400" v-show="selectAccountIndex == index" size="20"
+                    <van-icon class="mr-4 ml-auto text-yellow-400" v-show="selectAccountTypeIcon(index)" size="20"
                         name="success">
                     </van-icon>
                 </div>
@@ -197,12 +206,15 @@ import type { FamilyMember } from '@/entity/Familymember';
 import $router from '@/router';
 import { useAccount } from '@/stores/account';
 import { useAccountEdit } from '@/stores/accountEdit';
+import { useTransaction } from '@/stores/transactionLog';
 import { divideNumber } from '@/util/number';
 import Decimal from 'decimal.js';
 import { Toast } from 'vant';
 import { ref, watch, reactive, computed, toRef, nextTick } from 'vue'
 
 const accountStore = useAccount()
+const transactionStore = useTransaction()
+
 const indexActive = ref(1)
 const input = ref('')
 const description = ref('')
@@ -212,13 +224,65 @@ const inputComputed = computed(() => {
 
 const isSelectAccountShow = ref(false)
 const selectAccountIndex = ref(0)
-const selectAccountActions = toRef(accountStore, 'accountTypeList')
+const selectAccountActions = computed(() => {
+    return accountStore.accountTypeList.map(item => {
+        const template = accountStore.accountTypeTemplateList.find(temp => temp.id === item.account_type_template_id)
+        if (template) {
+            return {
+                icon: template.icon,
+                ...item
+            }
+        } else {
+            return null
+        }
+    }).filter(item => !!item) as (AccountType & { icon: string })[]
+})
 const accountType = ref(selectAccountActions.value[0])
+// 转账账户
+const selectFromAccountIndex = ref(-1)
+const fromAccountType = ref<null | (AccountType & { icon: string })>(null)
+
+const selectToAccountIndex = ref(-1)
+const toAccountType = ref<null | (AccountType & { icon: string })>()
+
+const selectAccountTypeActive = ref(0)
+
+function onOpenSelectAccountType() {
+    isSelectAccountShow.value = true
+    selectAccountTypeActive.value = 0
+}
+function onOpenSelectFromAccountType() {
+    isSelectAccountShow.value = true
+    selectAccountTypeActive.value = 1
+}
+function onOpenSelectToAccountType() {
+    isSelectAccountShow.value = true
+    selectAccountTypeActive.value = 2
+}
 
 function onSelectAccountType(index: number) {
-    selectAccountIndex.value = index
-    accountType.value = selectAccountActions.value[selectAccountIndex.value]
+    if (selectAccountTypeActive.value === 0) {
+        selectAccountIndex.value = index
+        accountType.value = selectAccountActions.value[selectAccountIndex.value]
+    } else if (selectAccountTypeActive.value === 1) {
+        selectFromAccountIndex.value = index
+        fromAccountType.value = selectAccountActions.value[selectFromAccountIndex.value]
+        console.log(fromAccountType.value)
+    } else {
+        selectToAccountIndex.value = index
+        toAccountType.value = selectAccountActions.value[selectToAccountIndex.value]
+    }
     isSelectAccountShow.value = false
+}
+
+function selectAccountTypeIcon(index: number) {
+    if (selectAccountTypeActive.value === 0) {
+        return selectAccountIndex.value === index
+    } else if (selectAccountTypeActive.value === 1) {
+        return selectFromAccountIndex.value === index
+    } else {
+        return selectToAccountIndex.value === index
+    }
 }
 
 const isSelectFamilyMemberShow = ref(false)
@@ -354,50 +418,77 @@ function onDelete() {
 }
 
 async function onSubmit() {
-    try {
-        const account = {
-            // 不四舍五入保留两位小数
-            account_number: Number(input.value.split('.').map((i, index) => {
-                if (index === 1) {
-                    return i.substring(0, 2)
+    if (indexActive.value === 2) {
+        if (!fromAccountType.value || !toAccountType.value) {
+            throw new Error('请选择账户')
+        }
+        try {
+            await transactionStore.addTransaction({
+                created_time: date.value,
+                description: description.value,
+                fee_number: Number(handfeeInput.value),
+                from_account_type_id: fromAccountType.value.id,
+                to_account_type_id: toAccountType.value.id,
+                transaction_number: Number(input.value.split('.').map((i, index) => {
+                    if (index === 1) {
+                        return i.substring(0, 2)
+                    }
+                    return i
+                }).join('.'))
+            })
+            $router.replace({
+                name: 'IndexView'
+            })
+        } catch (err: any) {
+            Toast.fail(err.message)
+        }
+    } else {
+
+        try {
+            const account = {
+                // 不四舍五入保留两位小数
+                account_number: Number(input.value.split('.').map((i, index) => {
+                    if (index === 1) {
+                        return i.substring(0, 2)
+                    }
+                    return i
+                }).join('.')),
+                account_type_id: accountType.value.id,
+                created_time: date.value,
+                description: description.value,
+                detail_type_id: takeNoteTypeList.value[selection.findIndex(item => item)].id,
+                type: indexActive.value
+            }
+            if (account.account_number === 0) {
+                throw new Error('不能为0')
+            }
+            // 判断账户是否允许欠账
+            const accountTypeSort = accountStore.accountTypeSortList.find(item => item.id === accountType.value.account_type_sort_id)
+            if (accountTypeSort && !accountTypeSort.is_allow_debt) {
+                const balance = Decimal.sub(accountType.value.income, accountType.value.spend).toNumber()
+                if (indexActive.value === 1 && Decimal.sub(balance, account.account_number).toNumber() < 0) {
+                    throw new Error('该账户余额不足')
                 }
-                return i
-            }).join('.')),
-            account_type_id: accountType.value.id,
-            created_time: date.value,
-            description: description.value,
-            detail_type_id: takeNoteTypeList.value[selection.findIndex(item => item)].id,
-            type: indexActive.value
-        }
-        if (account.account_number === 0) {
-            throw new Error('不能为0')
-        }
-        // 判断账户是否允许欠账
-        const accountTypeSort = accountStore.accountTypeSortList.find(item => item.id === accountType.value.account_type_sort_id)
-        if (accountTypeSort && !accountTypeSort.is_allow_debt) {
-            const balance = Decimal.sub(accountType.value.income, accountType.value.spend).toNumber()
-            if (indexActive.value === 1 && Decimal.sub(balance, account.account_number).toNumber() < 0) {
-                throw new Error('该账户余额不足')
             }
-        }
-        // 如果不能平分这个函数会报错
-        divideNumber(account.account_number, familyMemberSelection.value.length)
-        if (isModify.value) {
-            if (!oldAccount) {
-                return;
+            // 如果不能平分这个函数会报错
+            divideNumber(account.account_number, familyMemberSelection.value.length)
+            if (isModify.value) {
+                if (!oldAccount) {
+                    return;
+                }
+                await accountStore.updateAccount(oldAccount, {
+                    ...account,
+                }, familyMemberSelection.value)
+            } else {
+                await accountStore.addAccount(account, familyMemberSelection.value)
             }
-            await accountStore.updateAccount(oldAccount, {
-                ...account,
-            }, familyMemberSelection.value)
-        } else {
-            await accountStore.addAccount(account, familyMemberSelection.value)
+            $router.replace({
+                name: 'IndexView'
+            })
+        } catch (err: any) {
+            console.log(familyMemberSelection.value)
+            Toast.fail(err.message)
         }
-        $router.replace({
-            name: 'IndexView'
-        })
-    } catch (err: any) {
-        console.log(familyMemberSelection.value)
-        Toast.fail(err.message)
     }
 }
 
@@ -409,6 +500,7 @@ const accountEditStore = useAccountEdit()
 const isModify = computed(() => {
     return accountEditStore.modify
 })
+
 // 辅助修改
 let oldAccount: Account | null = null
 // 修改初始化
@@ -419,7 +511,7 @@ if (isModify.value) {
         indexActive.value = oldAccount.type
         input.value = String(oldAccount.account_number)
         description.value = oldAccount.description
-        accountType.value = selectAccountActions.value.find(i => i.id === oldAccount?.account_type_id) as AccountType
+        accountType.value = selectAccountActions.value.find(i => i.id === oldAccount?.account_type_id) as (AccountType & { icon: string })
         date.value = oldAccount.created_time
         accountEditStore.familyMemberList.forEach(i => {
             selectFamilyMemberCheck.value[selectFamilyMembers.value.findIndex(s => s.id === i.id)] = true

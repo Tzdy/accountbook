@@ -10,6 +10,7 @@ import { AccountTypeSort } from "@/entity/AccountTypeSort";
 import { AccountTypeTemplate } from "@/entity/AccountTypeTemplate";
 import { FamilyMember } from "@/entity/Familymember";
 import { User } from "./entity/User";
+import { TransactionLog } from "./entity/TransactionLog";
 
 export const indexdbUtil = new IndexDBUtil({
   name: "account",
@@ -25,6 +26,7 @@ export const indexdbUtil = new IndexDBUtil({
     AccountTypeTemplate,
     AccountType,
     FamilyMember,
+    TransactionLog,
     User,
   ],
   versionChange(transaction, currentVersion, goalVersion) {

@@ -26,7 +26,7 @@
 
             <div class="w-full mt-3">
                 <van-collapse @change="onChangeActive" v-model="active">
-                    <van-collapse-item v-for="item in monthList" :key="item.id" :name="item.id">
+                    <van-collapse-item v-for="item in monthList" :key="item.id" :name="formatDate(item.created_time)">
                         <template #title>
                             <div class="whitespace-nowrap">
                                 <div class="inline-block">
@@ -61,11 +61,12 @@
                         </template>
                         <template #default>
                             <div>
-                                <div v-if="!monthAccountMap[item.id]">
+                                <div v-if="!monthAccountMap[formatDate(item.created_time)]">
                                     <van-loading />
                                 </div>
                                 <div v-else>
-                                    <div v-for="day in dayFormat(monthAccountMap[item.id])" :key="day.id">
+                                    <div v-for="day in dayFormat(monthAccountMap[formatDate(item.created_time)])"
+                                        :key="day.id">
                                         <div class="flex text-xs">
                                             <div>
                                                 <span>{{ formatDate(day.time) }}</span>
@@ -110,6 +111,7 @@ import { betweenMonth, formatDate } from '@/util/date';
 import { AccountTypeMonth } from '@/entity/AccountTypeMonth';
 import { indexdbUtil } from '@/model';
 import { Between } from 'indexdb-util'
+import { TransactionLog } from '@/entity/TransactionLog';
 
 const accountStore = useAccount()
 const accountTypeId = Number(useRoute().query.accountTypeId)
@@ -120,8 +122,8 @@ const accountType = computed(() => {
 const active = ref([])
 
 const monthList = ref<AccountTypeMonth[]>([])
-// key AccountTypeMonth::id
-const monthAccountMap: Record<string, Account[]> = reactive({})
+// key dateStr 2022-11-01
+const monthAccountMap: Record<string, Array<Account | TransactionLog>> = reactive({})
 
 async function fetchAccountTypeMonth() {
     monthList.value = await indexdbUtil.manager.find(AccountTypeMonth, {
@@ -133,11 +135,12 @@ async function fetchAccountTypeMonth() {
 }
 fetchAccountTypeMonth()
 
-async function onChangeActive(activeArray: number[]) {
-    activeArray.forEach(async (id, index) => {
-        if (!monthAccountMap[id]) {
+async function onChangeActive(activeArray: string[]) {
+    activeArray.forEach(async (dateStr, index) => {
+        if (!monthAccountMap[dateStr]) {
             const divide = betweenMonth(monthList.value[index].created_time)
-            monthAccountMap[id] = await indexdbUtil.manager.find(Account, {
+            monthAccountMap[dateStr] = []
+            monthAccountMap[dateStr].push(...await indexdbUtil.manager.find(Account, {
                 where: {
                     created_time: Between(
                         divide[0],
@@ -148,7 +151,16 @@ async function onChangeActive(activeArray: number[]) {
                     account_type_id: accountTypeId,
                 },
                 order: [{ created_time: "DESC" }],
-            })
+            }), ...await indexdbUtil.manager.find(TransactionLog, {
+                where: {
+                    created_time: Between(
+                        divide[0],
+                        divide[1],
+                        false,
+                        true
+                    ),
+                }
+            }))
         }
     })
 }
@@ -166,37 +178,88 @@ interface AccountDisplay {
     }[];
 }
 
+function isAccount(item: any): item is Account {
+    return typeof item.detail_type_id === 'number' && typeof item.account_number === 'number' && typeof item.type === 'number'
+}
+
 // 目前没有accountType Day关系，意味着每月展开后，会展开当前月的所有账，不会分页。
 // 分页的话，如果那一天的账跨页了，不好计算当天的总支出/收入。如果有分页需求，就增加一个AccountTypeDay表。
-function dayFormat(accountList: Account[]) {
+function dayFormat(accountList: Array<Account | TransactionLog>) {
     const map: Record<string, boolean> = {}
     const dayAccountList: AccountDisplay[] = []
     accountList.forEach(account => {
-        const accountDetail = accountStore.accountDetailTypeList.find(item => item.id === account.detail_type_id)
-        const child: AccountDisplay['children'][0] = {
-            detailTypeName: accountDetail?.name || '',
-            icon: accountDetail?.icon || '',
-            number: account.account_number,
-            id: account.id,
-            type: account.type,
-        }
-
-        if (!map[account.account_day_id]) {
-            map[account.account_day_id] = true
-            dayAccountList.push({
-                id: account.account_day_id,
-                children: [child],
-                income: account.type === 0 ? account.account_number : 0,
-                spend: account.type === 1 ? account.account_number : 0,
-                time: account.created_time,
-            })
-        } else {
-            if (account.type === 0) {
-                dayAccountList[dayAccountList.length - 1].income = Decimal.sum(dayAccountList[dayAccountList.length - 1].income, account.account_number).toNumber()
-            } else if (account.type === 1) {
-                dayAccountList[dayAccountList.length - 1].spend = Decimal.sum(dayAccountList[dayAccountList.length - 1].spend, account.account_number).toNumber()
+        const key = formatDate(account.created_time)
+        if (isAccount(account)) {
+            const accountDetail = accountStore.accountDetailTypeList.find(item => item.id === account.detail_type_id)
+            const child: AccountDisplay['children'][0] = {
+                detailTypeName: accountDetail?.name || '',
+                icon: accountDetail?.icon || '',
+                number: account.account_number,
+                id: account.id,
+                type: account.type,
             }
-            dayAccountList[dayAccountList.length - 1].children.push(child)
+            if (!map[key]) {
+                map[key] = true
+                dayAccountList.push({
+                    id: account.account_day_id,
+                    children: [child],
+                    income: account.type === 0 ? account.account_number : 0,
+                    spend: account.type === 1 ? account.account_number : 0,
+                    time: account.created_time,
+                })
+            } else {
+                if (account.type === 0) {
+                    dayAccountList[dayAccountList.length - 1].income = Decimal.sum(dayAccountList[dayAccountList.length - 1].income, account.account_number).toNumber()
+                } else if (account.type === 1) {
+                    dayAccountList[dayAccountList.length - 1].spend = Decimal.sum(dayAccountList[dayAccountList.length - 1].spend, account.account_number).toNumber()
+                }
+                dayAccountList[dayAccountList.length - 1].children.push(child)
+            }
+        } else {
+            let child: null | AccountDisplay['children'][0] = null
+            if (accountType.value.id === account.from_account_type_id) {
+                const toAccountType = accountStore.accountTypeList.find(item => item.id === account.to_account_type_id)
+                if (toAccountType) {
+                    child = {
+                        detailTypeName: `${accountType.value.name}转入${toAccountType.name}`,
+                        icon: 'transaction',
+                        number: account.transaction_number,
+                        id: account.id,
+                        type: 1,
+                    }
+                }
+            } else if (accountType.value.id === account.to_account_type_id) {
+                const fromAccountType = accountStore.accountTypeList.find(item => item.id === account.from_account_type_id)
+                if (fromAccountType) {
+                    child = {
+                        detailTypeName: `${fromAccountType.name}转入${accountType.value.name}`,
+                        icon: 'transaction',
+                        number: account.transaction_number,
+                        id: account.id,
+                        type: 0,
+                    }
+                }
+            }
+
+            if (child) {
+                if (!map[key]) {
+                    map[key] = true
+                    dayAccountList.push({
+                        id: account.id,
+                        children: [child],
+                        income: child.type === 0 ? child.number : 0,
+                        spend: child.type === 1 ? child.number : 0,
+                        time: account.created_time,
+                    })
+                } else {
+                    if (child.type === 0) {
+                        dayAccountList[dayAccountList.length - 1].income = Decimal.sum(dayAccountList[dayAccountList.length - 1].income, child.number).toNumber()
+                    } else if (child.type === 1) {
+                        dayAccountList[dayAccountList.length - 1].spend = Decimal.sum(dayAccountList[dayAccountList.length - 1].spend, child.number).toNumber()
+                    }
+                    dayAccountList[dayAccountList.length - 1].children.push(child)
+                }
+            }
         }
     })
     return dayAccountList
