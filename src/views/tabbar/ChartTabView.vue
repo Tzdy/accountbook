@@ -63,15 +63,17 @@ function onChangeActive(number: number) {
 
 const accountStore = useAccount()
 
+const allAccount = ref<Account[]>([])
+
 const totalIncome = computed(() => {
-    return accountStore.accountTypeList.reduce((a, b) => {
-        return Decimal.sum(a, b.income).toNumber()
+    return allAccount.value.reduce((a, b) => {
+        return b.type === 0 ? Decimal.sum(a, b.account_number).toNumber() : a
     }, 0)
 })
 
 const totalSpend = computed(() => {
-    return accountStore.accountTypeList.reduce((a, b) => {
-        return Decimal.sum(a, b.spend).toNumber()
+    return allAccount.value.reduce((a, b) => {
+        return b.type === 1 ? Decimal.sum(a, b.account_number).toNumber() : a
     }, 0)
 })
 
@@ -84,23 +86,20 @@ const data = ref<{ value: number, name: string }[]>([])
 const loading = ref(false)
 async function fetchChartData(number: number) {
     loading.value = true
-    let array: Account[] = []
+    if (allAccount.value.length === 0) {
+        allAccount.value = await indexdbUtil.manager.find(Account)
+    }
     if (number === 2) {
-        array = await indexdbUtil.manager.find(Account)
         const map: Record<string, { name: string, value: number }> = {
             0: { name: '总收入', value: 0 },
             1: { name: '总支出', value: 0 }
         }
-        array.forEach(account => {
+        allAccount.value.forEach(account => {
             map[account.type].value = Decimal.sum(map[account.type].value, account.account_number).toNumber()
         })
         data.value = Object.values(map).filter(item => item.value)
     } else {
-        array = await indexdbUtil.manager.find(Account, {
-            where: {
-                type: number
-            }
-        })
+        const array = allAccount.value.filter(account => account.type === number)
         const map: Record<string, { name: string, value: number }> = {}
         array.forEach(account => {
             if (!map[account.detail_type_id]) {
