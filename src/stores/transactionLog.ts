@@ -33,7 +33,7 @@ export const useTransaction = defineStore("transaction_log", {
         type: 1,
       });
       await accountStore.upsertAccountTypeMonth({
-        account_number: totalNumber,
+        account_number: transaction.transaction_number,
         account_type_id: transaction.to_account_type_id,
         created_time: transaction.created_time,
         type: 0,
@@ -46,7 +46,7 @@ export const useTransaction = defineStore("transaction_log", {
       await accountStore.updateAccountType({
         type: 0,
         account_type_id: transaction.to_account_type_id,
-        account_number: totalNumber,
+        account_number: transaction.transaction_number,
       });
       await indexdbUtil.manager.insertOne(TransactionLog, transaction);
     },

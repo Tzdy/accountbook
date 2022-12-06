@@ -189,6 +189,7 @@ function dayFormat(accountList: Array<Account | TransactionLog>) {
     const dayAccountList: AccountDisplay[] = []
     accountList.forEach(account => {
         const key = formatDate(account.created_time)
+        // 普通账account
         if (isAccount(account)) {
             const accountDetail = accountStore.accountDetailTypeList.find(item => item.id === account.detail_type_id)
             const child: AccountDisplay['children'][0] = {
@@ -215,8 +216,9 @@ function dayFormat(accountList: Array<Account | TransactionLog>) {
                 }
                 dayAccountList[dayAccountList.length - 1].children.push(child)
             }
-        } else {
+        } else { // 转账
             let child: null | AccountDisplay['children'][0] = null
+            let feeChild: null | AccountDisplay['children'][0] = null // 手续费
             if (accountType.value.id === account.from_account_type_id) {
                 const toAccountType = accountStore.accountTypeList.find(item => item.id === account.to_account_type_id)
                 if (toAccountType) {
@@ -226,6 +228,16 @@ function dayFormat(accountList: Array<Account | TransactionLog>) {
                         number: account.transaction_number,
                         id: account.id,
                         type: 1,
+                    }
+                    // 转出方支付手续费，转入方不用支付手续费
+                    if (account.fee_number !== 0) {
+                        feeChild = {
+                            detailTypeName: '转账手续费',
+                            icon: 'transaction',
+                            number: account.fee_number,
+                            id: account.id,
+                            type: child.type
+                        }
                     }
                 }
             } else if (accountType.value.id === account.to_account_type_id) {
@@ -240,24 +252,28 @@ function dayFormat(accountList: Array<Account | TransactionLog>) {
                     }
                 }
             }
-
             if (child) {
+                // 转账金额 + 手续费
+                const balanceNumber = Decimal.sum(account.transaction_number, account.fee_number).toNumber()
                 if (!map[key]) {
                     map[key] = true
                     dayAccountList.push({
                         id: account.id,
                         children: [child],
-                        income: child.type === 0 ? child.number : 0,
-                        spend: child.type === 1 ? child.number : 0,
+                        income: child.type === 0 ? account.transaction_number : 0,
+                        spend: child.type === 1 ? balanceNumber : 0,
                         time: account.created_time,
                     })
                 } else {
                     if (child.type === 0) {
-                        dayAccountList[dayAccountList.length - 1].income = Decimal.sum(dayAccountList[dayAccountList.length - 1].income, child.number).toNumber()
+                        dayAccountList[dayAccountList.length - 1].income = Decimal.sum(dayAccountList[dayAccountList.length - 1].income, account.transaction_number).toNumber()
                     } else if (child.type === 1) {
-                        dayAccountList[dayAccountList.length - 1].spend = Decimal.sum(dayAccountList[dayAccountList.length - 1].spend, child.number).toNumber()
+                        dayAccountList[dayAccountList.length - 1].spend = Decimal.sum(dayAccountList[dayAccountList.length - 1].spend, balanceNumber).toNumber()
                     }
                     dayAccountList[dayAccountList.length - 1].children.push(child)
+                }
+                if (feeChild) {
+                    dayAccountList[dayAccountList.length - 1].children.push(feeChild)
                 }
             }
         }
