@@ -125,8 +125,6 @@ html {
 
 html {
     padding-bottom: 0;
-    padding-bottom: constant(safe-area-inset-bottom);
-    padding-bottom: env(safe-area-inset-bottom);
 }
 
 #app {
@@ -142,11 +140,18 @@ html {
 }
 
 .main-container-height {
-    height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - var(--van-tabbar-height));
+    height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - var(--van-tabbar-height) - constant(safe-area-inset-bottom));
+    height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - var(--van-tabbar-height) - env(safe-area-inset-bottom));
 }
 
 .min-main-container-height {
-    min-height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - var(--van-tabbar-height));
+    min-height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - var(--van-tabbar-height) - constant(safe-area-inset-bottom));
+    min-height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - var(--van-tabbar-height) - env(safe-area-inset-bottom));
+}
+
+.nav-container-height {
+    height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - constant(safe-area-inset-bottom));
+    height: calc(100% - env(safe-area-inset-top) - var(--van-nav-bar-height) - env(safe-area-inset-bottom));
 }
 </style>
     

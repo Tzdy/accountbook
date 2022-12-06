@@ -5,7 +5,7 @@
                 <van-icon name="delete-o" size="22" />
             </template>
         </van-nav-bar>
-        <div class="w-full flex flex-col items-center">
+        <div class="w-full flex flex-col items-center nav-container-height overflow-y-auto">
             <div
                 class="flex flex-col mt-2 rounded-lg bg-gradient-to-r from-pink-400 to-pink-300 w-11/12 py-2 bg-pink-400 text-light-50 box-border">
                 <div class="mx-8 border-b border-light-50/50">
@@ -150,7 +150,6 @@ async function onChangeActive(activeArray: string[]) {
                     ),
                     account_type_id: accountTypeId,
                 },
-                order: [{ created_time: "DESC" }],
             }), ...await indexdbUtil.manager.find(TransactionLog, {
                 where: {
                     created_time: Between(
@@ -159,8 +158,9 @@ async function onChangeActive(activeArray: string[]) {
                         false,
                         true
                     ),
-                }
+                },
             }))
+            monthAccountMap[dateStr].sort((a, b) => b.created_time.getTime() - a.created_time.getTime())
         }
     })
 }
