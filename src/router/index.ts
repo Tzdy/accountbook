@@ -27,6 +27,12 @@ const router = createRouter({
       component: () => import("@/views/AccountTypeDetail.vue"),
       meta: { layer: 1, keepAlive: true },
     },
+    {
+      path: "/transactionDetail",
+      name: "TransactionDetail",
+      component: () => import("@/views/TransactionDetail.vue"),
+      meta: { layer: 2, keepAlive: true },
+    },
     // {
     //   path: "/login",
     //   name: "login",

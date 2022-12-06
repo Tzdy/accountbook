@@ -12,7 +12,9 @@
             <div class="mt-4 font-bold flex items-center">
                 <span class="text-xl">{{ pass(netAsset) }}</span>
                 <div class="ml-auto mr-0 w-14">
-                    <van-button class="w-full" size="small" round type="warning">转账</van-button>
+                    <router-link :to="{ name: 'TransactionDetail' }">
+                        <van-button class="w-full" size="small" round type="warning">转账</van-button>
+                    </router-link>
                 </div>
             </div>
 
