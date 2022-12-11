@@ -17,6 +17,7 @@ export default defineConfig({
   plugins: [
     legacy({
       targets: "ie 11",
+      renderLegacyChunks: false,
     }),
     vue(),
     Components({

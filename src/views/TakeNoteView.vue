@@ -10,7 +10,7 @@
                 <van-tab v-if="!isModify" :name="2" title="转账"></van-tab>
             </van-tabs>
         </van-config-provider>
-        <div class="h-full flex flex-col">
+        <div class="flex flex-col flex-grow-1">
             <div class="overflow-auto bg-light-50 pb-4 mt-2 flex-shrink-0 flex-grow-1">
                 <div class="px-3 mx-4 bg-light-50 rounded-md flex flex-col overflow-auto shadow-xl h-full">
                     <!-- 支出/收入/转账金额 Label -->
