@@ -11,7 +11,7 @@ import { indexdbUtil } from "./model";
 import { createPinia } from "pinia";
 
 // PWA启动时，window.innerWidth和window.innerHeight是0 ？？？
-window.addEventListener("resize", () => {
+function init() {
   const html = document.querySelector("html");
   if (window.innerWidth / window.innerHeight >= 0.6) {
     html && (html.style.fontSize = window.innerWidth / (375 / 16) + "px");
@@ -22,6 +22,10 @@ window.addEventListener("resize", () => {
   } else {
     html && (html.style.fontSize = window.innerWidth / (375 / 19) + "px");
   }
+}
+init();
+window.addEventListener("resize", () => {
+  init();
 });
 
 indexdbUtil.connect().then(() => {

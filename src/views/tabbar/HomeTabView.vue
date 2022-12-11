@@ -41,10 +41,10 @@
                 </van-button>
             </div>
         </div>
-        <div class="min-main-container-height flex flex-col bg-gray-100 relative z-10">
+        <div class="flex flex-col bg-gray-100 relative z-10">
             <!-- 记账展示 -->
             <div class="w-full h-4 bg-gray-100 sticky top-0 z-60 flex-shrink-0"></div>
-            <div class="flex-col flex mx-3">
+            <div class="flex-col flex mx-3 bg-gray-100">
                 <div class="bg-light-50 rounded-xl" v-for="(item, index) in list" :key="index">
                     <div
                         class="flex items-center p-4 border-b border-b-solid border-gray-200 sticky top-4 bg-light-50 z-50">
@@ -56,20 +56,22 @@
                         <span class="mr-0 text-sm font-600">{{ item.spend
                         }}</span>
                     </div>
-                    <div class="flex-col flex">
-                        <router-link v-for="(account, accountIndex) in item.account" :key="accountIndex"
-                            :to="{ name: 'AccountDetail', query: { id: account.id } }">
-                            <div class="flex items-center p-4">
-                                <div class="flex-shrink-0 flex-grow-0">
-                                    <svg-icon color="black" size="2rem" :name="account.icon" />
+                    <div class="overview-y-auto">
+                        <div class="flex-col flex sticky top-0 bg-light-50 z-10">
+                            <router-link v-for="(account, accountIndex) in item.account" :key="accountIndex"
+                                :to="{ name: 'AccountDetail', query: { id: account.id } }">
+                                <div class="flex items-center p-4">
+                                    <div class="flex-shrink-0 flex-grow-0">
+                                        <svg-icon color="black" size="2rem" :name="account.icon" />
+                                    </div>
+                                    <div class="ml-3">{{ account.detailTypeName }}</div>
+                                    <div class="mr-0 ml-auto">
+                                        <span v-if="account.type === 1">-</span>
+                                        <span>{{ account.number }}</span>
+                                    </div>
                                 </div>
-                                <div class="ml-3">{{ account.detailTypeName }}</div>
-                                <div class="mr-0 ml-auto">
-                                    <span v-if="account.type === 1">-</span>
-                                    <span>{{ account.number }}</span>
-                                </div>
-                            </div>
-                        </router-link>
+                            </router-link>
+                        </div>
                     </div>
                     <div class="w-full h-4 bg-gray-100"></div>
                 </div>
