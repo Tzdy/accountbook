@@ -73,7 +73,8 @@
                                                 <span class="ml-1">周</span>
                                                 <span>{{ day.time.getDay() }}</span>
                                             </div>
-                                            <div class="ml-auto mr-0">{{ Decimal.sub(day.income, day.spend).toNumber()
+                                            <div class="ml-auto mr-0">{{
+                                                Decimal.sub(day.income, day.spend).toNumber()
                                             }}</div>
                                         </div>
                                         <router-link v-for="(account, accountIndex) in day.children" :key="accountIndex"
@@ -136,9 +137,9 @@ async function fetchAccountTypeMonth() {
 fetchAccountTypeMonth()
 
 async function onChangeActive(activeArray: string[]) {
-    activeArray.forEach(async (dateStr, index) => {
+    activeArray.forEach(async (dateStr) => {
         if (!monthAccountMap[dateStr]) {
-            const divide = betweenMonth(monthList.value[index].created_time)
+            const divide = betweenMonth(new Date(dateStr))
             monthAccountMap[dateStr] = []
             monthAccountMap[dateStr].push(...await indexdbUtil.manager.find(Account, {
                 where: {

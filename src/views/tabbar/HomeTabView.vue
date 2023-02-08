@@ -50,10 +50,12 @@
                         class="flex items-center p-4 border-b border-b-solid border-gray-200 sticky top-4 bg-light-50 z-50">
                         <span class="font-600">{{ formatDate(item.time) }}</span>
                         <span class="mr-1 ml-auto text-sm">收入:</span>
-                        <span class="mr-4 text-sm font-600">{{ item.income
+                        <span class="mr-4 text-sm font-600">{{
+                            item.income
                         }}</span>
                         <span class="mr-1 text-sm">支出:</span>
-                        <span class="mr-0 text-sm font-600">{{ item.spend
+                        <span class="mr-0 text-sm font-600">{{
+                            item.spend
                         }}</span>
                     </div>
                     <div class="overview-y-auto">
@@ -90,6 +92,7 @@ import { ref, toRef, onUpdated, computed } from 'vue'
 import { useAccountEdit } from '@/stores/accountEdit';
 import { useEvent } from '@/stores/event'
 import Decimal from 'decimal.js';
+import { $routerPush } from '@/router';
 
 interface AccountDisplay {
     time: Date;
@@ -126,7 +129,7 @@ function onScrollChange() {
 const router = useRouter()
 function onNavToEdit() {
     useAccountEdit().modify = false
-    router.push({ name: 'TakeNoteView' })
+    $routerPush({ name: 'TakeNoteView' })
 }
 const accountStore = useAccount()
 accountStore.fetchAccount()

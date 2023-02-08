@@ -56,6 +56,7 @@ import type { AccountType } from '@/entity/AccountType';
 import { formatDateTime } from '@/util/date';
 import { useAccountEdit } from '@/stores/accountEdit';
 import type { FamilyMember } from '@/entity/Familymember';
+import { $routerReplace } from '@/router';
 
 const route = useRoute()
 const router = useRouter()
@@ -70,8 +71,8 @@ function onStartEdit() {
         accountEditStore.account = account.value
         accountEditStore.familyMemberList = familyMemberList.value
         accountEditStore.modify = true
-        router.push({
-            name: 'TakeNoteView'
+        $routerReplace({
+            name: 'TakeNoteView',
         })
     }
 }

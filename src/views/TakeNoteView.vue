@@ -16,7 +16,7 @@
                     <!-- 支出/收入/转账金额 Label -->
                     <div class="flex border-b border-b-solid border-gray-200">
                         <span class="font-600 py-4  basis-1/5 text-center whitespace-nowrap flex-shrink-0">{{
-                                labelComputed
+                            labelComputed
                         }}</span>
                         <span
                             :class="{ 'text-green-500': indexActive === 0, 'text-red-500': indexActive === 1, 'text-yellow-400': indexActive === 2 }"
@@ -203,7 +203,7 @@
 import type { Account } from '@/entity/Account';
 import type { AccountType } from '@/entity/AccountType';
 import type { FamilyMember } from '@/entity/Familymember';
-import $router from '@/router';
+import $router, { stack, $routerBack, $routerReplace } from '@/router';
 import { useAccount } from '@/stores/account';
 import { useAccountEdit } from '@/stores/accountEdit';
 import { useTransaction } from '@/stores/transactionLog';
@@ -436,9 +436,14 @@ async function onSubmit() {
                     return i
                 }).join('.'))
             })
-            $router.replace({
-                name: 'IndexView'
-            })
+            if (stack.length === 0) {
+                $routerReplace({
+                    name: 'IndexView',
+                    replace: true,
+                })
+            } else {
+                $routerBack()
+            }
         } catch (err: any) {
             Toast.fail(err.message)
         }
@@ -482,9 +487,14 @@ async function onSubmit() {
             } else {
                 await accountStore.addAccount(account, familyMemberSelection.value)
             }
-            $router.replace({
-                name: 'IndexView'
-            })
+            if (stack.length === 0) {
+                $routerReplace({
+                    name: 'IndexView',
+                    replace: true,
+                })
+            } else {
+                $routerBack()
+            }
         } catch (err: any) {
             console.log(familyMemberSelection.value)
             Toast.fail(err.message)

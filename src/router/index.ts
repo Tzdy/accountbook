@@ -1,4 +1,8 @@
-import { createRouter, createWebHistory } from "vue-router";
+import {
+  createRouter,
+  createWebHistory,
+  type RouteLocationRaw,
+} from "vue-router";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -40,4 +44,23 @@ const router = createRouter({
     // },
   ],
 });
+
+export const stack: RouteLocationRaw[] = [];
+
+export function $routerPush(to: RouteLocationRaw) {
+  stack.push(to);
+  return router.push(to);
+}
+
+export function $routerReplace(to: RouteLocationRaw) {
+  stack.pop();
+  stack.push(to);
+  return router.replace(to);
+}
+
+export function $routerBack() {
+  stack.pop();
+  return router.back();
+}
+
 export default router;
